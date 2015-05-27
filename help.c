@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
 #include <openssl/sha.h>
 
 #include "help.h"
@@ -34,12 +35,24 @@ struct dbt *timeparse(const char *stime){
 	return dt;
 }
 
-char mstat(const char *fn,struct stat *st){
+char mstat(const char *fn,struct mstat *st){
 	char ffn[FNLEN];
+	struct stat s;
 	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
-	if(!stat(ffn,st)) return 1;
-	error(0,"file stat failed for '%s'",ffn);
-	return 0;
+	if(stat(ffn,&s)){
+		error(0,"file stat failed for '%s'",ffn);
+		return 0;
+	}
+	st->mode=0;
+	if(S_ISREG(s.st_mode)) st->mode|=MS_FILE;
+	if(S_ISDIR(s.st_mode)) st->mode|=MS_DIR;
+	if(S_ISLNK(s.st_mode)) st->mode|=MS_LNK;
+	st->uid=s.st_uid;
+	st->gid=s.st_gid;
+	st->size=s.st_size;
+	st->mtime=s.st_mtime;
+	st->ctime=s.st_ctime;
+	return 1;
 }
 
 #define BUFLEN	(1024*1024)
@@ -57,4 +70,8 @@ char msha(const char *fn,unsigned char *sha){
 	}
 	SHA1_Final(sha,&c);
 	return 0;
+}
+
+char statcmp(struct mstat *s1,struct mstat *s2){
+	return memcmp(s1,s2,sizeof(struct mstat));
 }

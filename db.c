@@ -9,6 +9,7 @@
 
 #include "db.h"
 #include "main.h"
+#include "help.h"
 
 #define HNCH	8192
 
@@ -18,8 +19,9 @@
 struct dbf {
 	struct dbf *nxt;
 	char fn[FNLEN];
-	struct stat st;
+	struct mstat st;
 	unsigned char sha[SHALEN];
+	char mk;
 };
 
 struct dbt {
@@ -74,7 +76,7 @@ void dbload(){
 		dt=dbtnew(t);
 		while(fgets(ffn,FNLEN,fd) && ffn[0]!='\n'){
 			struct dbf *df=dbfnew(dt,fnrmnewline(ffn));
-			fread(&df->st,sizeof(struct stat),1,fd);
+			fread(&df->st,sizeof(struct mstat),1,fd);
 			fread(df->sha,sizeof(unsigned char),SHALEN,fd);
 		}
 		fclose(fd);
@@ -94,7 +96,7 @@ void dbtsave(struct dbt *dt){
 	fwrite(&dt->t,sizeof(time_t),1,fd);
 	for(ch=0;ch<HNCH;ch++) for(df=dt->fhsh[ch];df;df=df->nxt){
 		fprintf(fd,"%s\n",df->fn);
-		fwrite(&df->st,sizeof(struct stat),1,fd);
+		fwrite(&df->st,sizeof(struct mstat),1,fd);
 		fwrite(df->sha,sizeof(unsigned char),SHALEN,fd);
 	}
 	fprintf(fd,"\n");
@@ -118,6 +120,14 @@ struct dbt *dbtget(time_t t){
 }
 
 struct dbt *dbtgetnxt(struct dbt *dt){ return dt ? dt->nxt : db.dt; }
+
+struct dbt *dbtgetnewest(){
+	struct dbt *dti,*dt;
+	dti=dt=dbtgetnxt(NULL);
+	while((dti=dbtgetnxt(dti))) if(dbtgett(dti)>dbtgett(dt)) dt=dti;
+	return dt;
+}
+
 time_t dbtgett(struct dbt *dt){ return dt->t; }
 
 struct dbf *dbfnew(struct dbt *dt,const char *fn){
@@ -126,6 +136,13 @@ struct dbf *dbfnew(struct dbt *dt,const char *fn){
 	df->nxt=dt->fhsh[fk];
 	dt->fhsh[fk]=df;
 	memcpy(df->fn,fn,FNLEN);
+	return df;
+}
+
+struct dbf *dbfget(struct dbt *dt,const char *fn){
+	int fk=fkey(fn);
+	struct dbf *df=dt->fhsh[fk];
+	while(df && strncmp(fn,df->fn,FNLEN)) df=df->nxt;
 	return df;
 }
 
@@ -138,6 +155,7 @@ struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
 }
 
 const char *dbfgetfn(struct dbf *df){ return df->fn; }
-struct stat *dbfgetst(struct dbf *df){ return &df->st; }
+struct mstat *dbfgetst(struct dbf *df){ return &df->st; }
 unsigned char *dbfgetsha(struct dbf *df){ return df->sha; }
+char *dbfgetmk(struct dbf *df){ return &df->mk; }
 

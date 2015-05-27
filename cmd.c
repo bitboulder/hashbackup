@@ -9,6 +9,7 @@
 #include "main.h"
 #include "db.h"
 #include "help.h"
+#include "dat.h"
 
 void init(const char *basedir){
 	FILE *fd;
@@ -18,22 +19,53 @@ void init(const char *basedir){
 	fclose(fd);
 }
 
+void difile(const char *fn,void *vdt){
+	struct dbt *dt=(struct dbt*)vdt;
+	struct dbf *df;
+	struct mstat st;
+	if(!(df=dbfget(dt,fn))){ printf("new: %s\n",fn); return; }
+	mstat(fn,&st);
+	if(statcmp(&st,dbfgetst(df))) printf("mod: %s\n",fn);
+	*dbfgetmk(df)=1;
+}
+
 void diff(const char *stime){
+	struct dbt *dt;
+	struct dbf *df;
+	if(!stime){ if(!(dt=dbtgetnewest())) error(1,"no time found in db"); }
+	else if(!(dt=timeparse(stime))) error(1,"unkown time: '%s'",stime);
+	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
+	dirrec(dbbdir(),"",difile,dt);
+	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)) printf("del: %s\n",dbfgetfn(df));
 }
 
 void cifile(const char *fn,void *vdt){
-	struct dbt *dt=(struct dbt*)vdt;
+	struct dbt *dtn=((struct dbt**)vdt)[0];
+	struct dbt *dt =((struct dbt**)vdt)[1];
 	struct dbf *df=dbfnew(dt,fn);
-	struct stat *st;
+	struct dbf *dfn=dtn?dbfget(dtn,fn):NULL;
+	struct mstat *st;
+	unsigned char *sha;
 	mstat(fn,st=dbfgetst(df));
-	if(S_ISREG(st->st_mode) && !S_ISLNK(st->st_mode))
-		msha(fn,dbfgetsha(df));
+	if(dfn && !statcmp(st,dbfgetst(dfn))){
+		memcpy(dbfgetsha(df),dbfgetsha(dfn),SHALEN);
+		return;
+	}
+	switch(st->mode){
+	case MS_FILE:
+		msha(fn,sha=dbfgetsha(df));
+		datadd(sha,fn);
+	break;
+	/* TODO others */
+	}
 }
 
 void commit(){
-	struct dbt *dt=dbtnew(0);
+	struct dbt *dt[2];
+	dt[0]=dbtgetnewest();
+	dt[1]=dbtnew(0);
 	dirrec(dbbdir(),"",cifile,dt);
-	dbtsave(dt);
+	dbtsave(dt[1]);
 }
 
 void dbcheck(){
