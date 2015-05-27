@@ -1,17 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "cmd.h"
 #include "main.h"
 #include "db.h"
 #include "help.h"
-
-struct dbt *timeparse(const char *stime){
-	time_t t=atoi(stime); /* TODO: real parse */
-	struct dbt *dt=dbtget(t);
-	if(!dt) error(1,"time not found: '%s' -> %li\n",stime,t);
-	return dt;
-}
 
 void init(const char *basedir){
 	FILE *fd;
@@ -26,7 +22,9 @@ void diff(const char *stime){
 
 void cifile(const char *fn,void *vdt){
 	struct dbt *dt=(struct dbt*)vdt;
-	dbfnew(dt,fn);
+	struct dbf *df=dbfnew(dt,fn);
+	struct stat *st;
+	if((st=mstat(fn))) *dbfgetst(df)=*st;
 }
 
 void commit(){

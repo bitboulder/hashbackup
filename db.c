@@ -3,6 +3,9 @@
 #include <time.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "db.h"
 #include "main.h"
@@ -15,6 +18,7 @@
 struct dbf {
 	struct dbf *nxt;
 	char fn[FNLEN];
+	struct stat st;
 };
 
 struct dbt {
@@ -69,6 +73,7 @@ void dbload(){
 		dt=dbtnew(t);
 		while(fgets(ffn,FNLEN,fd) && ffn[0]!='\n'){
 			struct dbf *df=dbfnew(dt,fnrmnewline(ffn));
+			fread(&df->st,sizeof(struct stat),1,fd);
 		}
 		fclose(fd);
 	}
@@ -87,6 +92,7 @@ void dbtsave(struct dbt *dt){
 	fwrite(&dt->t,sizeof(time_t),1,fd);
 	for(ch=0;ch<HNCH;ch++) for(df=dt->fhsh[ch];df;df=df->nxt){
 		fprintf(fd,"%s\n",df->fn);
+		fwrite(&df->st,sizeof(struct stat),1,fd);
 	}
 	fprintf(fd,"\n");
 	fclose(fd);
@@ -129,4 +135,5 @@ struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
 }
 
 const char *dbfgetfn(struct dbf *df){ return df->fn; }
+struct stat *dbfgetst(struct dbf *df){ return &df->st; }
 
