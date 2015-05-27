@@ -35,6 +35,25 @@ struct dbt *timeparse(const char *stime){
 	return dt;
 }
 
+const char *timefmt(time_t t){
+	static char buf[128];
+	strftime(buf,sizeof(buf),"%y-%m-%d %H:%M",localtime(&t));
+	return buf;
+}
+
+const char *sizefmt(size_t si){
+	static char buf[32];
+	double s=si;
+	char *e=" kMGT",fmt[32];
+	int k=0;
+	while(s>=1000 && e[0]){ s/=1024; e++; }
+	if(s<100) k++;
+	if(s<10) k++;
+	snprintf(fmt,sizeof(fmt),"%%.%if%%c",k);
+	snprintf(buf,sizeof(buf),fmt,s,e[0]);
+	return buf;
+}
+
 char mstat(const char *fn,struct mstat *st){
 	char ffn[FNLEN];
 	struct stat s;

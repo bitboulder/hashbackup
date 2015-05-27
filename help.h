@@ -15,6 +15,8 @@ struct mstat {
 
 void dirrec(const char *bdir,const char *dir,void (*fnc)(const char*,void *),void *arg);
 struct dbt *timeparse(const char *stime);
+const char *timefmt(time_t t);
+const char *sizefmt(size_t si);
 char mstat(const char *fn,struct mstat *st);
 char msha(const char *fn,unsigned char *sha);
 

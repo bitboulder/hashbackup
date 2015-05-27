@@ -74,10 +74,16 @@ void dbcheck(){
 void tlist(){
 	struct dbt *dt=NULL;
 	while((dt=dbtgetnxt(dt))){
-		int n=0;
+		int nf=0;
 		struct dbf *df=NULL;
-		while((df=dbfgetnxt(dt,df))) n++;
-		printf("t %lu n %i\n",dbtgett(dt),n);
+		size_t si=0,ex=0;
+		while((df=dbfgetnxt(dt,df))){
+			struct mstat *st=dbfgetst(df);
+			si+=st->size;
+			nf++;
+		}
+		printf("%s nf %4i si %5s /",timefmt(dbtgett(dt)),nf,sizefmt(ex));
+		printf("%5s\n",sizefmt(si));
 	}
 }
 
