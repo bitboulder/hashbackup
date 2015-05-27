@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -24,7 +25,9 @@ void cifile(const char *fn,void *vdt){
 	struct dbt *dt=(struct dbt*)vdt;
 	struct dbf *df=dbfnew(dt,fn);
 	struct stat *st;
-	if((st=mstat(fn))) *dbfgetst(df)=*st;
+	mstat(fn,st=dbfgetst(df));
+	if(S_ISREG(st->st_mode) && !S_ISLNK(st->st_mode))
+		msha(fn,dbfgetsha(df));
 }
 
 void commit(){
@@ -49,7 +52,13 @@ void tlist(){
 void flistt(struct dbt *dt){
 	struct dbf *df=NULL;
 	printf("t %lu\n",dbtgett(dt));
-	while((df=dbfgetnxt(dt,df))) printf("  %s\n",dbfgetfn(df));
+	while((df=dbfgetnxt(dt,df))){
+		int i;
+		unsigned char *sha=dbfgetsha(df);
+		printf("  ");
+		for(i=0;i<SHALEN;i++) printf("%02x",sha[i]);
+		printf(" %s\n",dbfgetfn(df));
+	}
 }
 
 void flist(const char *stime){

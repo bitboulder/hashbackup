@@ -23,5 +23,6 @@ struct dbf *dbfnew(struct dbt *dt,const char *fn);
 struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df);
 const char *dbfgetfn(struct dbf *df);
 struct stat *dbfgetst(struct dbf *df);
+unsigned char *dbfgetsha(struct dbf *df);
 
 #endif
