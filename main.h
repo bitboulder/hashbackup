@@ -3,6 +3,6 @@
 
 #define FNLEN	1024
 
-void error(const char *fmt,...);
+void error(char quit,const char *fmt,...);
 
 #endif

@@ -47,8 +47,9 @@ void dbload(){
 	struct dirent *di;
 	if(!(fd=fopen("basedir","r"))) return;
 	if(!fgets(db.bdir,FNLEN,fd)) return;
-	db.bdir[FNLEN-1]='\0';
 	fclose(fd);
+	db.bdir[FNLEN-1]='\0';
+	fnrmnewline(db.bdir);
 	if(!(dd=opendir(DD))) return;
 	while((di=readdir(dd))){
 		char fn[FNLEN];
@@ -61,9 +62,9 @@ void dbload(){
 		if(strncmp(di->d_name+i,".dbt",4)) continue;
 		di->d_name[i+4]='\0';
 		snprintf(fn,FNLEN,DD "/%s",di->d_name);
-		if(!(fd=fopen(fn,"rb"))) error("dbt file not readable: '%s'",fn);
-		fread(&v,sizeof(unsigned int),1,fd); if(v!=MARKER)  error("dbt file with wrong marker: '%s'",fn);
-		fread(&v,sizeof(unsigned int),1,fd); if(v!=VERSION) error("dbt file with wrong version: '%s'",fn);
+		if(!(fd=fopen(fn,"rb"))) error(1,"dbt file not readable: '%s'",fn);
+		fread(&v,sizeof(unsigned int),1,fd); if(v!=MARKER)  error(1,"dbt file with wrong marker: '%s'",fn);
+		fread(&v,sizeof(unsigned int),1,fd); if(v!=VERSION) error(1,"dbt file with wrong version: '%s'",fn);
 		fread(&t,sizeof(time_t),1,fd);
 		dt=dbtnew(t);
 		while(fgets(ffn,FNLEN,fd) && ffn[0]!='\n'){
@@ -79,8 +80,8 @@ void dbtsave(struct dbt *dt){
 	unsigned int v;
 	int ch;
 	struct dbf *df;
-	snprintf(fn,FNLEN,DD "/%li",dt->t);
-	if(!(fd=fopen(fn,"wb"))) error("db open failed for '%s'",fn);
+	snprintf(fn,FNLEN,DD "/%li.dbt",dt->t);
+	if(!(fd=fopen(fn,"wb"))) error(1,"db open failed for '%s'",fn);
 	v=MARKER;  fwrite(&v,sizeof(unsigned int),1,fd);
 	v=VERSION; fwrite(&v,sizeof(unsigned int),1,fd);
 	fwrite(&dt->t,sizeof(time_t),1,fd);
@@ -126,4 +127,6 @@ struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
 	for(;ch<HNCH;ch++) if(dt->fhsh[ch]) return dt->fhsh[ch];
 	return NULL;
 }
+
+const char *dbfgetfn(struct dbf *df){ return df->fn; }
 
