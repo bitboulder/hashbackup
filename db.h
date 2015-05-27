@@ -1,12 +1,21 @@
 #ifndef _DB_H
 #define _DB_H
 
-#define FNLEN	1024
+#include <time.h>
 
-void dbload(const char *fn);
-void dbsave(const char *fn);
+#define DD	"db"
+#define DH	"dat"
+
+struct dbf;
+struct dbt;
+
+void dbload();
+void dbtsave(struct dbt *dt);
+
+const char *dbbdir();
 
 struct dbt *dbtnew(time_t t);
+struct dbt *dbtget(time_t t);
 struct dbt *dbtgetnxt(struct dbt *dt);
 time_t dbtgett(struct dbt *dt);
 

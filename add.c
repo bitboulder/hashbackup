@@ -1,3 +1,4 @@
+#define _BSD_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -24,7 +25,6 @@ void adddir(struct dbt *dt,const char *bdir,const char *dir){
 }
 
 void add(const char *bdir){
-	struct dbt *dt=dbtnew(0);
 	adddir(dt,bdir,"");
 }
 

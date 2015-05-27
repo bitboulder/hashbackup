@@ -5,7 +5,7 @@
 
 #include "main.h"
 #include "db.h"
-#include "add.h"
+#include "cmd.h"
 
 void error(const char *fmt,...){
 	va_list ap;
@@ -17,24 +17,27 @@ void error(const char *fmt,...){
 	exit(1);
 }
 
-void show(){
-	struct dbt *dt=NULL;
-	while((dt=dbtgetnxt(dt))){
-		int n=0;
-		struct dbf *df=NULL;
-		while((df=dbfgetnxt(dt,df))) n++;
-		printf("t %lu n %i\n",dbtgett(dt),n);
-	}
+void usage(const char *prg){
+	error("Usage: %s (init|diff|commit|dbcheck|tlist|flist|del)",prg);
 }
 
 int main(int argc,char **argv){
-	char *dbf,*bdir,*cmd;
-	if(argc<3) error("Usage: %s DBFILE BASEDIR (add|show)",argv[0]);
-	dbf=argv[1];
-	bdir=argv[2];
-	cmd=argv[3];
-	dbload(dbf);
-	if(!strncmp(cmd,"add",3)){ add(bdir); dbsave(dbf); }
-	if(!strncmp(cmd,"show",4)){ show(); }
+	char *cmd;
+	dbload();
+	if(argc<2) usage(argv[0]);
+	cmd=argv[1];
+	if(!strncmp(cmd,"init",3)){
+		if(argc<3) error("Usage: %s init BASEDIR",argv[0]);
+		init(argv[2]);
+	}
+	else if(!strncmp(cmd,"diff",4)){ diff(argc<3?NULL:argv[2]); }
+	else if(!strncmp(cmd,"commit",4)){ commit(); }
+	else if(!strncmp(cmd,"dbcheck",4)){ dbcheck(); }
+	else if(!strncmp(cmd,"tlist",4)){ tlist(); }
+	else if(!strncmp(cmd,"flist",4)){ flist(argc<3?NULL:argv[2]); }
+	else if(!strncmp(cmd,"del",4)){
+		if(argc<3) error("Usage: %s del TIMESPEC",argv[0]);
+		del(argv[2]);
+	}else usage(argv[0]);
 	return 0;
 }
