@@ -81,6 +81,7 @@ void dbload(){
 		}
 		fclose(fd);
 	}
+	closedir(dd);
 }
 
 void dbtsave(struct dbt *dt){

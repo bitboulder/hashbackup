@@ -25,7 +25,7 @@ void difile(const char *fn,void *vdt){
 	struct mstat st;
 	if(!(df=dbfget(dt,fn))){ printf("new: %s\n",fn); return; }
 	mstat(fn,&st);
-	if(statcmp(&st,dbfgetst(df))) printf("mod: %s\n",fn);
+	if(memcmp(&st,dbfgetst(df),sizeof(struct mstat))) printf("mod: %s\n",fn);
 	*dbfgetmk(df)=1;
 }
 
@@ -47,7 +47,7 @@ void cifile(const char *fn,void *vdt){
 	struct mstat *st;
 	unsigned char *sha;
 	mstat(fn,st=dbfgetst(df));
-	if(dfn && !statcmp(st,dbfgetst(dfn))){
+	if(dfn && !memcmp(st,dbfgetst(dfn),sizeof(struct mstat))){
 		memcpy(dbfgetsha(df),dbfgetsha(dfn),SHALEN);
 		return;
 	}

@@ -17,6 +17,5 @@ void dirrec(const char *bdir,const char *dir,void (*fnc)(const char*,void *),voi
 struct dbt *timeparse(const char *stime);
 char mstat(const char *fn,struct mstat *st);
 char msha(const char *fn,unsigned char *sha);
-char statcmp(struct mstat *s1,struct mstat *s2);
 
 #endif

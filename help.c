@@ -43,7 +43,7 @@ char mstat(const char *fn,struct mstat *st){
 		error(0,"file stat failed for '%s'",ffn);
 		return 0;
 	}
-	st->mode=0;
+	memset(st,0,sizeof(struct mstat));
 	if(S_ISREG(s.st_mode)) st->mode|=MS_FILE;
 	if(S_ISDIR(s.st_mode)) st->mode|=MS_DIR;
 	if(S_ISLNK(s.st_mode)) st->mode|=MS_LNK;
@@ -69,9 +69,7 @@ char msha(const char *fn,unsigned char *sha){
 		SHA1_Update(&c,buf,r);
 	}
 	SHA1_Final(sha,&c);
+	fclose(fd);
 	return 0;
 }
 
-char statcmp(struct mstat *s1,struct mstat *s2){
-	return memcmp(s1,s2,sizeof(struct mstat));
-}
