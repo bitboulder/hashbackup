@@ -45,17 +45,19 @@ void cifile(const char *fn,void *vdt){
 	struct dbf *df=dbfnew(dt,fn);
 	struct dbf *dfn=dtn?dbfget(dtn,fn):NULL;
 	struct mstat *st;
-	unsigned char *sha;
 	mstat(fn,st=dbfgetst(df));
 	if(dfn && !memcmp(st,dbfgetst(dfn),sizeof(struct mstat))){
-		memcpy(dbfgetsha(df),dbfgetsha(dfn),SHALEN);
+		struct dbh *dh=dbfgeth(dfn);
+		if(dh) dbhadd(dh,dt,df);
 		return;
 	}
 	switch(st->mode){
-	case MS_FILE:
-		msha(fn,sha=dbfgetsha(df));
+	case MS_FILE: {
+		unsigned char sha[SHALEN];
+		msha(fn,sha);
+		dbhadd(dbhget(sha),dt,df);
 		datadd(sha,fn);
-	break;
+	} break;
 	/* TODO others */
 	}
 }
@@ -80,6 +82,7 @@ void tlist(){
 		while((df=dbfgetnxt(dt,df))){
 			struct mstat *st=dbfgetst(df);
 			si+=st->size;
+			if(dbhexdt(dbfgeth(df),dt)) ex+=st->size;
 			nf++;
 		}
 		printf("%s nf %4i si %5s /",timefmt(dbtgett(dt)),nf,sizefmt(ex));
@@ -92,7 +95,7 @@ void flistt(struct dbt *dt){
 	printf("t %lu\n",dbtgett(dt));
 	while((df=dbfgetnxt(dt,df))){
 		int i;
-		unsigned char *sha=dbfgetsha(df);
+		unsigned char *sha=dbhgetsha(dbfgeth(df));
 		printf("  ");
 		for(i=0;i<SHALEN;i++) printf("%02x",sha[i]);
 		printf(" %s\n",dbfgetfn(df));

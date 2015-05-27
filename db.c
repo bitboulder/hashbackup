@@ -20,7 +20,7 @@ struct dbf {
 	struct dbf *nxt;
 	char fn[FNLEN];
 	struct mstat st;
-	unsigned char sha[SHALEN];
+	struct dbh *dh;
 	char mk;
 };
 
@@ -30,11 +30,25 @@ struct dbt {
 	struct dbf *fhsh[HNCH];
 };
 
+struct dbhf {
+	struct dbhf *nxt;
+	struct dbt *dt;
+	struct dbf *df;
+};
+
+struct dbh {
+	struct dbh *nxt;
+	unsigned char sha[SHALEN];
+	struct dbhf *hf;
+};
+
 struct db {
 	char bdir[FNLEN];
 	struct dbt *dt;
+	struct dbh *dh[HNCH];
 } db = {
 	.dt=NULL,
+	.dh={NULL},
 };
 
 int fkey(const char *fn){
@@ -74,10 +88,17 @@ void dbload(){
 		fread(&v,sizeof(unsigned int),1,fd); if(v!=VERSION) error(1,"dbt file with wrong version: '%s'",fn);
 		fread(&t,sizeof(time_t),1,fd);
 		dt=dbtnew(t);
-		while(fgets(ffn,FNLEN,fd) && ffn[0]!='\n'){
+		while(fgets(ffn,FNLEN,fd) && ffn[0]!='\n' && ffn[0]){
 			struct dbf *df=dbfnew(dt,fnrmnewline(ffn));
 			fread(&df->st,sizeof(struct mstat),1,fd);
-			fread(df->sha,sizeof(unsigned char),SHALEN,fd);
+			switch(df->st.mode){
+			case MS_FILE: {
+				unsigned char sha[SHALEN];
+				fread(sha,sizeof(unsigned char),SHALEN,fd);
+				dbhadd(dbhget(sha),dt,df);
+			} break;
+			/* TODO others */
+			}
 		}
 		fclose(fd);
 	}
@@ -98,7 +119,10 @@ void dbtsave(struct dbt *dt){
 	for(ch=0;ch<HNCH;ch++) for(df=dt->fhsh[ch];df;df=df->nxt){
 		fprintf(fd,"%s\n",df->fn);
 		fwrite(&df->st,sizeof(struct mstat),1,fd);
-		fwrite(df->sha,sizeof(unsigned char),SHALEN,fd);
+		switch(df->st.mode){
+		case MS_FILE: fwrite(df->dh->sha,sizeof(unsigned char),SHALEN,fd); break;
+		/* TODO others */
+		}
 	}
 	fprintf(fd,"\n");
 	fclose(fd);
@@ -157,6 +181,39 @@ struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
 
 const char *dbfgetfn(struct dbf *df){ return df->fn; }
 struct mstat *dbfgetst(struct dbf *df){ return &df->st; }
-unsigned char *dbfgetsha(struct dbf *df){ return df->sha; }
 char *dbfgetmk(struct dbf *df){ return &df->mk; }
+struct dbh *dbfgeth(struct dbf *df){ return df->dh; }
 
+struct dbh *dbhget(unsigned char *sha){
+	unsigned int ch=(*(unsigned int*)sha)%HNCH;
+	struct dbh *dh=db.dh[ch];
+	while(dh && memcmp(dh->sha,sha,SHALEN)) dh=dh->nxt;
+	if(dh) return dh;
+	dh=malloc(sizeof(struct dbh));
+	dh->nxt=db.dh[ch];
+	db.dh[ch]=dh;
+	memcpy(dh->sha,sha,SHALEN);
+	dh->hf=NULL;
+	return dh;
+}
+
+void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df){
+	struct dbhf *hf=dh->hf;
+	df->dh=dh;
+	while(hf && hf->df!=df) hf=hf->nxt;
+	if(hf) return;
+	hf=malloc(sizeof(struct dbhf));
+	hf->nxt=dh->hf;
+	dh->hf=hf;
+	hf->dt=dt;
+	hf->df=df;
+}
+
+unsigned char *dbhgetsha(struct dbh *dh){ return dh->sha; }
+
+char dbhexdt(struct dbh *dh,struct dbt *dt){
+	struct dbhf *hf;
+	if(!dh) return 1;
+	for(hf=dh->hf;hf;hf=hf->nxt) if(hf->dt!=dt) return 0;
+	return 1;
+}
