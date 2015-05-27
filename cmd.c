@@ -29,11 +29,16 @@ void difile(const char *fn,void *vdt){
 	*dbfgetmk(df)=1;
 }
 
-void diff(const char *stime){
+struct dbt *timenewest(const char *stime){
 	struct dbt *dt;
-	struct dbf *df;
 	if(!stime){ if(!(dt=dbtgetnewest())) error(1,"no time found in db"); }
 	else if(!(dt=timeparse(stime))) error(1,"unkown time: '%s'",stime);
+	return dt;
+}
+
+void diff(const char *stime){
+	struct dbt *dt=timenewest(stime);
+	struct dbf *df;
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
 	dirrec(dbbdir(),"",difile,dt);
 	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)) printf("del: %s\n",dbfgetfn(df));
@@ -68,6 +73,22 @@ void commit(){
 	dt[1]=dbtnew(0);
 	dirrec(dbbdir(),"",cifile,dt);
 	dbtsave(dt[1]);
+}
+
+void restore(const char *dstdir,const char *stime){
+	struct dbt *dt=timenewest(stime);
+	struct dbf *df=NULL;
+	while((df=dbfgetnxt(dt,df))){
+		struct mstat *st=dbfgetst(df);
+		char fn[FNLEN];
+		snprintf(fn,FNLEN,"%s/%s",dstdir,dbfgetfn(df));
+		switch(st->mode){
+		case MS_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break;
+		case MS_DIR: mkdir(fn,0777); break;
+		/* TODO others */
+		}
+		mstatset(st,fn);
+	}
 }
 
 void dbcheck(){

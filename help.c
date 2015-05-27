@@ -58,7 +58,7 @@ char mstat(const char *fn,struct mstat *st){
 	char ffn[FNLEN];
 	struct stat s;
 	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
-	if(stat(ffn,&s)){
+	if(lstat(ffn,&s)){
 		error(0,"file stat failed for '%s'",ffn);
 		return 0;
 	}
@@ -72,6 +72,10 @@ char mstat(const char *fn,struct mstat *st){
 	st->mtime=s.st_mtime;
 	st->ctime=s.st_ctime;
 	return 1;
+}
+
+void mstatset(struct mstat *st,const char *fn){
+	/* TODO */
 }
 
 #define BUFLEN	(1024*1024)

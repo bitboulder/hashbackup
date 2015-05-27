@@ -32,6 +32,10 @@ int main(int argc,char **argv){
 	}
 	else if(!strncmp(cmd,"diff",4)){ diff(argc<3?NULL:argv[2]); }
 	else if(!strncmp(cmd,"commit",4)){ commit(); }
+	else if(!strncmp(cmd,"restore",4)){
+		if(argc<3) error(1,"Usage: %s restore DSTDIR [TIME]",argv[0]);
+		restore(argv[2],argc<4?NULL:argv[3]);
+	}
 	else if(!strncmp(cmd,"dbcheck",4)){ dbcheck(); }
 	else if(!strncmp(cmd,"tlist",4)){ tlist(); }
 	else if(!strncmp(cmd,"flist",4)){ flist(argc<3?NULL:argv[2]); }

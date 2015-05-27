@@ -20,7 +20,7 @@ void datadd(const unsigned char *sha,const char *fn){
 	if(!(fdi=fopen(ffn,"rb"))){ error(1,"file open failed for '%s'",ffn); return; }
 	snprintf(ffn,FNLEN,"mkdir -p " DH "/%02x",sha[0]); system(ffn);
 	snprintf(ffn,FNLEN,"mkdir -p " DH "/%02x/%02x",sha[0],sha[1]); system(ffn);
-	if(!(fdo=fopen(ffo,"wb"))){ error(1,"file open failed for '%s'",ffn); return; }
+	if(!(fdo=fopen(ffo,"wb"))){ error(1,"file open failed for '%s'",ffo); return; }
 	while(!feof(fdi)){
 		char buf[BUFLEN];
 		size_t r=fread(buf,1,BUFLEN,fdi);
@@ -29,3 +29,23 @@ void datadd(const unsigned char *sha,const char *fn){
 	fclose(fdi);
 	fclose(fdo);
 }
+
+void datget(const unsigned char *sha,const char *ffo){
+	char ffi[FNLEN];
+	FILE *fdi,*fdo;
+	snprintf(ffi,FNLEN,DH "/%02x/%02x/%016lx%016lx%02x",
+		sha[0],sha[1],
+		*(uint64_t*)(sha+2),
+		*(uint64_t*)(sha+10),
+		*(uint16_t*)(sha+18));
+	if(!(fdi=fopen(ffi,"rb"))){ error(1,"file open failed for '%s'",ffi); return; }
+	if(!(fdo=fopen(ffo,"wb"))){ error(1,"file open failed for '%s'",ffo); return; }
+	while(!feof(fdi)){
+		char buf[BUFLEN];
+		size_t r=fread(buf,1,BUFLEN,fdi);
+		fwrite(buf,1,r,fdo);
+	}
+	fclose(fdi);
+	fclose(fdo);
+}
+

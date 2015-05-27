@@ -18,6 +18,7 @@ struct dbt *timeparse(const char *stime);
 const char *timefmt(time_t t);
 const char *sizefmt(size_t si);
 char mstat(const char *fn,struct mstat *st);
+void mstatset(struct mstat *st,const char *fn);
 char msha(const char *fn,unsigned char *sha);
 
 #endif
