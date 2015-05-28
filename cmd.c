@@ -105,14 +105,12 @@ int cifile(const char *fn,void *vdt){
 		}else{
 			unsigned char sha[SHALEN];
 			shaget(fn,sha);
-			dbhadd(dbhget(sha),dt,df);
 			datadd(sha,fn);
+			dbhadd(dbhget(sha),dt,df);
 		}
 	break;
 	case MS_DIR: break;
-	case MS_LNK: lnkget(fn,dbfgetlnk(df));
-				 printf("%s -> %s\n",fn,dbfgetlnk(df));
-				 break;
+	case MS_LNK: lnkget(fn,dbfgetlnk(df)); break;
 	case MS_NONE: error(0,"no backup for none regular file: '%s'",fn);
 	}
 	return 0;

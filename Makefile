@@ -1,4 +1,4 @@
-LFLAGS=-lssl -lcrypto
+LFLAGS=-lssl -lcrypto -lz
 CFLAGS=-g -Wall -pedantic -std=c99
 
 backdat: $(shell ls *.c *.h)

@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #include "dat.h"
 #include "main.h"
@@ -31,33 +32,41 @@ void mkd(const char *fn){
 	}
 }
 
-void copyfile(const char *fni,const char *fno){
-	FILE *fdi,*fdo;
-	mkd(fno);
-	if(!(fdi=fopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return; }
-	if(!(fdo=fopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return; }
-	while(!feof(fdi)){
-		char buf[BUFLEN];
-		size_t r=fread(buf,1,BUFLEN,fdi);
-		fwrite(buf,1,r,fdo);
-	}
-	fclose(fdi);
-	fclose(fdo);
-}
-
 void datadd(const unsigned char *sha,const char *fn){
 	char fni[FNLEN],fno[FNLEN];
 	struct stat st;
+	FILE *fdi;
+	gzFile fdo;
 	shafn(sha,fno);
 	if(!stat(fno,&st)) return;
 	snprintf(fni,FNLEN,"%s/%s",dbbdir(),fn);
-	copyfile(fni,fno);
+	mkd(fno);
+	if(!(fdi=fopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return; }
+	if(!(fdo=gzopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return; }
+	while(!feof(fdi)){
+		char buf[BUFLEN];
+		size_t r=fread(buf,1,BUFLEN,fdi);
+		gzwrite(fdo,buf,r);
+	}
+	fclose(fdi);
+	gzclose(fdo);
 }
 
 void datget(const unsigned char *sha,const char *fno){
 	char fni[FNLEN];
+	gzFile fdi;
+	FILE *fdo;
 	shafn(sha,fni);
-	copyfile(fni,fno);
+	mkd(fno);
+	if(!(fdi=gzopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return; }
+	if(!(fdo=fopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return; }
+	while(!gzeof(fdi)){
+		char buf[BUFLEN];
+		size_t r=gzread(fdi,buf,BUFLEN);
+		fwrite(buf,1,r,fdo);
+	}
+	gzclose(fdi);
+	fclose(fdo);
 }
 
 void datdel(const unsigned char *sha){
