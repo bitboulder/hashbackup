@@ -20,6 +20,7 @@ struct dbt *dbtget(time_t t);
 struct dbt *dbtgetnxt(struct dbt *dt);
 struct dbt *dbtgetnewest();
 time_t dbtgett(struct dbt *dt);
+void dbtdel(struct dbt *dt);
 
 struct dbf *dbfnew(struct dbt *dt,const char *fn);
 struct dbf *dbfget(struct dbt *dt,const char *fn);

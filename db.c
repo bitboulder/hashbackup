@@ -3,8 +3,6 @@
 #include <time.h>
 #include <string.h>
 #include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include "db.h"
@@ -159,6 +157,12 @@ struct dbt *dbtgetnewest(){
 }
 
 time_t dbtgett(struct dbt *dt){ return dt->t; }
+
+void dbtdel(struct dbt *dt){
+	char fn[FNLEN];
+	snprintf(fn,FNLEN,DD "/%li.dbt",dt->t);
+	unlink(fn);
+}
 
 struct dbf *dbfnew(struct dbt *dt,const char *fn){
 	struct dbf *df=calloc(1,sizeof(struct dbf));

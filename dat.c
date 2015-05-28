@@ -59,3 +59,9 @@ void datget(const unsigned char *sha,const char *fno){
 	copyfile(fni,fno);
 }
 
+void datdel(const unsigned char *sha){
+	char fn[FNLEN];
+	shafn(sha,fn);
+	unlink(fn);
+}
+

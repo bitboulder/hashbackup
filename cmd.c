@@ -140,9 +140,18 @@ void restore(const char *dstdir,const char *stime){
 	}
 }
 
-void dbcheck(){
+void del(const char *stime){
+	struct dbt *dt=timeparse(stime);
+	struct dbf *df=NULL;
+	tlistt(dt);
+	while((df=dbfgetnxt(dt,df))){
+		struct dbh *dh=dbfgeth(df);
+		if(dbfgetst(df)->mode==MS_FILE && dbhexdt(dh,dt)) datdel(dbhgetsha(dh));
+	}
+	dbtdel(dt);
 }
 
-void del(const char *stime){
+void dbcheck(){
+	
 }
 
