@@ -19,7 +19,8 @@
 struct dbf {
 	struct dbf *nxt;
 	char fn[FNLEN];
-	struct mstat st;
+	char lnk[FNLEN];
+	struct st st;
 	struct dbh *dh;
 	char mk;
 };
@@ -90,14 +91,16 @@ void dbload(){
 		dt=dbtnew(t);
 		while(fgets(ffn,FNLEN,fd) && ffn[0]!='\n' && ffn[0]){
 			struct dbf *df=dbfnew(dt,fnrmnewline(ffn));
-			fread(&df->st,sizeof(struct mstat),1,fd);
+			fread(&df->st,sizeof(struct st),1,fd);
 			switch(df->st.mode){
 			case MS_FILE: {
 				unsigned char sha[SHALEN];
 				fread(sha,sizeof(unsigned char),SHALEN,fd);
 				dbhadd(dbhget(sha),dt,df);
 			} break;
-			/* TODO others */
+			case MS_LNK: fread(df->lnk,sizeof(char),FNLEN,fd); break;
+			case MS_DIR: break;
+			case MS_NONE: break;
 			}
 		}
 		fclose(fd);
@@ -118,10 +121,12 @@ void dbtsave(struct dbt *dt){
 	fwrite(&dt->t,sizeof(time_t),1,fd);
 	for(ch=0;ch<HNCH;ch++) for(df=dt->fhsh[ch];df;df=df->nxt){
 		fprintf(fd,"%s\n",df->fn);
-		fwrite(&df->st,sizeof(struct mstat),1,fd);
+		fwrite(&df->st,sizeof(struct st),1,fd);
 		switch(df->st.mode){
 		case MS_FILE: fwrite(df->dh->sha,sizeof(unsigned char),SHALEN,fd); break;
-		/* TODO others */
+		case MS_LNK: fwrite(df->lnk,sizeof(char),FNLEN,fd); break;
+		case MS_DIR: break;
+		case MS_NONE: break;
 		}
 	}
 	fprintf(fd,"\n");
@@ -180,9 +185,10 @@ struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
 }
 
 const char *dbfgetfn(struct dbf *df){ return df->fn; }
-struct mstat *dbfgetst(struct dbf *df){ return &df->st; }
+struct st *dbfgetst(struct dbf *df){ return &df->st; }
 char *dbfgetmk(struct dbf *df){ return &df->mk; }
 struct dbh *dbfgeth(struct dbf *df){ return df->dh; }
+char *dbfgetlnk(struct dbf *df){ return df->lnk; }
 
 struct dbh *dbhget(unsigned char *sha){
 	unsigned int ch=(*(unsigned int*)sha)%HNCH;

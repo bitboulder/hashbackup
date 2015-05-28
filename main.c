@@ -21,6 +21,7 @@ void usage(const char *prg){
 	error(1,"Usage: %s (init|diff|commit|dbcheck|tlist|flist|del)",prg);
 }
 
+void mkd(const char *fn);
 int main(int argc,char **argv){
 	char *cmd;
 	dbload();

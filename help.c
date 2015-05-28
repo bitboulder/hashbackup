@@ -12,20 +12,22 @@
 #include "main.h"
 #include "db.h"
 
-void dirrec(const char *bdir,const char *dir,void (*fnc)(const char*,void *),void *arg){
+int dirrec(const char *bdir,const char *dir,int (*fnc)(const char*,void *),void *arg){
 	char dn[FNLEN];
 	DIR *dd;
 	struct dirent *di;
+	int ret=0;
 	snprintf(dn,FNLEN,"%s/%s",bdir,dir);
-	if(!(dd=opendir(dn))){ error(0,"opendir failed for '%s'",dn); return; }
+	if(!(dd=opendir(dn))){ error(0,"opendir failed for '%s'",dn); return 0; }
 	while((di=readdir(dd))){
 		char fn[FNLEN];
 		if(di->d_name[0]=='.' && (!di->d_name[1] || (di->d_name[1]=='.' && !di->d_name[2]))) continue;
 		snprintf(fn,FNLEN,"%s/%s",dir,di->d_name);
-		fnc(fn,arg);
-		if((di->d_type&DT_DIR) && !(di->d_type&DT_LNK)) dirrec(bdir,fn,fnc,arg);
+		ret+=fnc(fn,arg);
+		if((di->d_type&DT_DIR) && !(di->d_type&DT_LNK)) ret+=dirrec(bdir,fn,fnc,arg);
 	}
 	closedir(dd);
+	return ret;
 }
 
 struct dbt *timeparse(const char *stime){
@@ -54,7 +56,7 @@ const char *sizefmt(size_t si){
 	return buf;
 }
 
-char mstat(const char *fn,struct mstat *st){
+char statget(const char *fn,struct st *st){
 	char ffn[FNLEN];
 	struct stat s;
 	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
@@ -62,10 +64,10 @@ char mstat(const char *fn,struct mstat *st){
 		error(0,"file stat failed for '%s'",ffn);
 		return 0;
 	}
-	memset(st,0,sizeof(struct mstat));
-	if(S_ISREG(s.st_mode)) st->mode|=MS_FILE;
-	if(S_ISDIR(s.st_mode)) st->mode|=MS_DIR;
-	if(S_ISLNK(s.st_mode)) st->mode|=MS_LNK;
+	memset(st,0,sizeof(struct st));
+	if(S_ISREG(s.st_mode)) st->mode=MS_FILE;
+	if(S_ISDIR(s.st_mode)) st->mode=MS_DIR;
+	if(S_ISLNK(s.st_mode)) st->mode=MS_LNK;
 	st->uid=s.st_uid;
 	st->gid=s.st_gid;
 	st->size=s.st_size;
@@ -74,12 +76,22 @@ char mstat(const char *fn,struct mstat *st){
 	return 1;
 }
 
-void mstatset(struct mstat *st,const char *fn){
+void statset(struct st *st,const char *fn){
 	/* TODO */
 }
 
+void lnkget(const char *fn,char *lnk){
+	char ffn[FNLEN];
+	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
+	readlink(ffn,lnk,FNLEN);
+}
+
+void lnkset(const char *lnk,const char *fn){
+	symlink(lnk,fn);
+}
+
 #define BUFLEN	(1024*1024)
-char msha(const char *fn,unsigned char *sha){
+char shaget(const char *fn,unsigned char *sha){
 	char ffn[FNLEN];
 	FILE *fd;
 	SHA_CTX c;

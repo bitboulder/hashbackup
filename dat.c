@@ -23,7 +23,9 @@ void mkd(const char *fn){
 	int i;
 	char dn[FNLEN];
 	for(i=0;i<FNLEN && fn[i];i++){
-		if(i && fn[i]=='/' && stat(dn,NULL)) mkdir(dn,0777); /* TODO check */
+		struct stat st;
+		dn[i]='\0';
+		if(i && fn[i]=='/' && stat(dn,&st)) mkdir(dn,0777);
 		dn[i]=fn[i];
 	}
 }
@@ -44,8 +46,9 @@ void copyfile(const char *fni,const char *fno){
 
 void datadd(const unsigned char *sha,const char *fn){
 	char fni[FNLEN],fno[FNLEN];
+	struct stat st;
 	shafn(sha,fno);
-	if(!stat(fno,NULL)) return; /* TODO check */
+	if(!stat(fno,&st)) return;
 	snprintf(fni,FNLEN,"%s/%s",dbbdir(),fn);
 	copyfile(fni,fno);
 }

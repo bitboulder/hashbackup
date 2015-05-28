@@ -25,9 +25,10 @@ struct dbf *dbfnew(struct dbt *dt,const char *fn);
 struct dbf *dbfget(struct dbt *dt,const char *fn);
 struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df);
 const char *dbfgetfn(struct dbf *df);
-struct mstat *dbfgetst(struct dbf *df);
+struct st *dbfgetst(struct dbf *df);
 char *dbfgetmk(struct dbf *df);
 struct dbh *dbfgeth(struct dbf *df);
+char *dbfgetlnk(struct dbf *df);
 
 struct dbh *dbhget(unsigned char *sha);
 void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df);
