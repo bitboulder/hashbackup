@@ -56,12 +56,15 @@ const char *sizefmt(size_t si){
 	return buf;
 }
 
-char statget(const char *fn,struct st *st){
+char statget(char bdir,const char *fn,struct st *st){
 	char ffn[FNLEN];
 	struct stat s;
-	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
-	if(lstat(ffn,&s)){
-		error(0,"file stat failed for '%s'",ffn);
+	if(bdir){
+		snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
+		fn=ffn;
+	}
+	if(lstat(fn,&s)){
+		error(0,"file stat failed for '%s'",fn);
 		return 0;
 	}
 	memset(st,0,sizeof(struct st));

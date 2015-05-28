@@ -8,6 +8,7 @@
 #include "db.h"
 #include "main.h"
 #include "help.h"
+#include "dat.h"
 
 #define HNCH	8192
 
@@ -39,6 +40,7 @@ struct dbh {
 	struct dbh *nxt;
 	unsigned char sha[SHALEN];
 	struct dbhf *hf;
+	size_t si;
 };
 
 struct db {
@@ -204,6 +206,7 @@ struct dbh *dbhget(unsigned char *sha){
 	db.dh[ch]=dh;
 	memcpy(dh->sha,sha,SHALEN);
 	dh->hf=NULL;
+	dh->si=datsi(sha);
 	return dh;
 }
 
@@ -220,6 +223,7 @@ void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df){
 }
 
 unsigned char *dbhgetsha(struct dbh *dh){ return dh->sha; }
+size_t dbhgetsi(struct dbh *dh){ return dh->si; }
 
 char dbhexdt(struct dbh *dh,struct dbt *dt){
 	struct dbhf *hf;

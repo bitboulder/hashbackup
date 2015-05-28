@@ -8,6 +8,7 @@
 #include "dat.h"
 #include "main.h"
 #include "db.h"
+#include "help.h"
 
 #define BUFLEN	(1024*1024)
 
@@ -65,3 +66,11 @@ void datdel(const unsigned char *sha){
 	unlink(fn);
 }
 
+size_t datsi(const unsigned char *sha){
+	char fn[FNLEN];
+	struct st st;
+	shafn(sha,fn);
+	if(statget(0,fn,&st)) return st.size;
+	error(0,"dat file missing: '%s'",fn);
+	return 0;
+}

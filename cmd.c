@@ -20,15 +20,20 @@ void init(const char *basedir){
 void tlistt(struct dbt *dt){
 	int nf=0;
 	struct dbf *df=NULL;
-	size_t si=0,ex=0;
+	size_t si=0,ex=0,gz=0;
 	while((df=dbfgetnxt(dt,df))){
 		struct st *st=dbfgetst(df);
+		struct dbh *dh=dbfgeth(df);
 		si+=st->size;
-		if(dbhexdt(dbfgeth(df),dt)) ex+=st->size;
+		if(dh){
+			gz+=dbhgetsi(dh);
+			if(dbhexdt(dh,dt)) ex+=dbhgetsi(dh);
+		}
 		nf++;
 	}
-	printf("%s nf %4i si %5s /",timefmt(dbtgett(dt)),nf,sizefmt(ex));
-	printf("%5s\n",sizefmt(si));
+	printf("%s nf %4i si %5s ",timefmt(dbtgett(dt)),nf,sizefmt(si));
+	printf("gz %5s ",sizefmt(gz));
+	printf("ex %5s\n",sizefmt(ex));
 }
 
 void tlist(){
@@ -61,7 +66,7 @@ int difile(const char *fn,void *vdt){
 	struct dbf *df;
 	struct st st;
 	if(!(df=dbfget(dt,fn))){ printf("new: %s\n",fn); return 1; }
-	statget(fn,&st);
+	statget(1,fn,&st);
 	*dbfgetmk(df)=1;
 	if(memcmp(&st,dbfgetst(df),sizeof(struct st))){ printf("mod: %s\n",fn); return 1; }
 	return 0;
@@ -91,7 +96,7 @@ int cifile(const char *fn,void *vdt){
 	struct dbf *df=dbfnew(dt,fn);
 	struct dbf *dfn=dtn?dbfget(dtn,fn):NULL;
 	struct st *st;
-	statget(fn,st=dbfgetst(df));
+	statget(1,fn,st=dbfgetst(df));
 	switch(st->mode){
 	case MS_FILE:
 		if(dfn && !memcmp(st,dbfgetst(dfn),sizeof(struct st))){
