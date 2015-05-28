@@ -4,6 +4,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #include "db.h"
 #include "main.h"
@@ -67,6 +68,7 @@ void dbload(){
 	FILE *fd;
 	DIR *dd;
 	struct dirent *di;
+	gzFile gd;
 	if(!(fd=fopen("basedir","r"))) return;
 	if(!fgets(db.bdir,FNLEN,fd)) return;
 	fclose(fd);
@@ -84,53 +86,53 @@ void dbload(){
 		if(strncmp(di->d_name+i,".dbt",4)) continue;
 		di->d_name[i+4]='\0';
 		snprintf(fn,FNLEN,DD "/%s",di->d_name);
-		if(!(fd=fopen(fn,"rb"))) error(1,"dbt file not readable: '%s'",fn);
-		fread(&v,sizeof(unsigned int),1,fd); if(v!=MARKER)  error(1,"dbt file with wrong marker: '%s'",fn);
-		fread(&v,sizeof(unsigned int),1,fd); if(v!=VERSION) error(1,"dbt file with wrong version: '%s'",fn);
-		fread(&t,sizeof(time_t),1,fd);
+		if(!(gd=gzopen(fn,"rb"))) error(1,"dbt file not readable: '%s'",fn);
+		gzread(gd,&v,sizeof(unsigned int)); if(v!=MARKER)  error(1,"dbt file with wrong marker: '%s'",fn);
+		gzread(gd,&v,sizeof(unsigned int)); if(v!=VERSION) error(1,"dbt file with wrong version: '%s'",fn);
+		gzread(gd,&t,sizeof(time_t));
 		dt=dbtnew(t);
-		while(fgets(ffn,FNLEN,fd) && ffn[0]!='\n' && ffn[0]){
+		while(gzgets(gd,ffn,FNLEN) && ffn[0]!='\n' && ffn[0]){
 			struct dbf *df=dbfnew(dt,fnrmnewline(ffn));
-			fread(&df->st,sizeof(struct st),1,fd);
+			gzread(gd,&df->st,sizeof(struct st));
 			switch(df->st.mode){
 			case MS_FILE: {
 				unsigned char sha[SHALEN];
-				fread(sha,sizeof(unsigned char),SHALEN,fd);
+				gzread(gd,sha,sizeof(unsigned char)*SHALEN);
 				dbhadd(dbhget(sha),dt,df);
 			} break;
-			case MS_LNK: fread(df->lnk,sizeof(char),FNLEN,fd); break;
+			case MS_LNK: gzread(gd,df->lnk,sizeof(char)*FNLEN); break;
 			case MS_DIR: break;
 			case MS_NONE: break;
 			}
 		}
-		fclose(fd);
+		gzclose(gd);
 	}
 	closedir(dd);
 }
 
 void dbtsave(struct dbt *dt){
 	char fn[FNLEN];
-	FILE *fd;
+	gzFile fd;
 	unsigned int v;
 	int ch;
 	struct dbf *df;
 	snprintf(fn,FNLEN,DD "/%li.dbt",dt->t);
-	if(!(fd=fopen(fn,"wb"))) error(1,"db open failed for '%s'",fn);
-	v=MARKER;  fwrite(&v,sizeof(unsigned int),1,fd);
-	v=VERSION; fwrite(&v,sizeof(unsigned int),1,fd);
-	fwrite(&dt->t,sizeof(time_t),1,fd);
+	if(!(fd=gzopen(fn,"wb"))) error(1,"db open failed for '%s'",fn);
+	v=MARKER;  gzwrite(fd,&v,sizeof(unsigned int));
+	v=VERSION; gzwrite(fd,&v,sizeof(unsigned int));
+	gzwrite(fd,&dt->t,sizeof(time_t));
 	for(ch=0;ch<HNCH;ch++) for(df=dt->fhsh[ch];df;df=df->nxt){
-		fprintf(fd,"%s\n",df->fn);
-		fwrite(&df->st,sizeof(struct st),1,fd);
+		gzprintf(fd,"%s\n",df->fn);
+		gzwrite(fd,&df->st,sizeof(struct st));
 		switch(df->st.mode){
-		case MS_FILE: fwrite(df->dh->sha,sizeof(unsigned char),SHALEN,fd); break;
-		case MS_LNK: fwrite(df->lnk,sizeof(char),FNLEN,fd); break;
+		case MS_FILE: gzwrite(fd,df->dh->sha,sizeof(unsigned char)*SHALEN); break;
+		case MS_LNK: gzwrite(fd,df->lnk,sizeof(char)*FNLEN); break;
 		case MS_DIR: break;
 		case MS_NONE: break;
 		}
 	}
-	fprintf(fd,"\n");
-	fclose(fd);
+	gzprintf(fd,"\n");
+	gzclose(fd);
 }
 
 const char *dbbdir(){ return db.bdir; }

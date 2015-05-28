@@ -136,7 +136,7 @@ void restore(const char *dstdir,const char *stime){
 		switch(st->mode){
 		case MS_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break;
 		case MS_DIR: mkd(fn); break;
-		case MS_LNK: mkd(fn); printf("%s -> %s\n",fn,dbfgetlnk(df)); lnkset(dbfgetlnk(df),fn); break;
+		case MS_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
 		case MS_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
 		}
 		statset(st,fn);
