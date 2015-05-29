@@ -12,7 +12,7 @@
 #include "db.h"
 #include "help.h"
 
-#define BUFLEN	(1024*1024)
+#define BUFLEN	8192
 
 void sha2fn(const unsigned char *sha,char *fn){
 	snprintf(fn,FNLEN,DH "/%02x/%02x/%016lx%016lx%02x",

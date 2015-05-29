@@ -94,7 +94,7 @@ void lnkset(const char *lnk,const char *fn){
 	symlink(lnk,fn);
 }
 
-#define BUFLEN	(1024*1024)
+#define BUFLEN	8192
 char shaget(const char *fn,unsigned char *sha){
 	char ffn[FNLEN];
 	FILE *fd;
