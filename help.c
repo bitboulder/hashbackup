@@ -84,6 +84,23 @@ void statset(struct st *st,const char *fn){
 	/* TODO */
 }
 
+size_t filesize(const char *fn){
+	struct stat st;
+	if(!lstat(fn,&st)) return st.st_size;
+	return 0;
+}
+
+void mkd(const char *fn){
+	int i;
+	char dn[FNLEN];
+	for(i=0;i<FNLEN && fn[i];i++){
+		struct stat st;
+		dn[i]='\0';
+		if(i && fn[i]=='/' && lstat(dn,&st)) mkdir(dn,0777);
+		dn[i]=fn[i];
+	}
+}
+
 void lnkget(const char *fn,char *lnk){
 	char ffn[FNLEN];
 	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);

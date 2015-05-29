@@ -14,8 +14,12 @@ int dirrec(const char *bdir,char ex,const char *dir,int (*fnc)(const char*,void 
 struct dbt *timeparse(const char *stime);
 const char *timefmt(time_t t);
 const char *sizefmt(size_t si);
+
 char statget(char bdir,const char *fn,struct st *st);
 void statset(struct st *st,const char *fn);
+size_t filesize(const char *fn);
+void mkd(const char *fn);
+
 void lnkget(const char *fn,char *lnk);
 void lnkset(const char *lnk,const char *fn);
 char shaget(const char *fn,unsigned char *sha);

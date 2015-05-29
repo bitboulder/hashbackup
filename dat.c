@@ -1,10 +1,6 @@
-#define _BSD_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <zlib.h>
 
 #include "dat.h"
@@ -22,22 +18,10 @@ void sha2fn(const unsigned char *sha,char *fn){
 		*(uint16_t*)(sha+18));
 }
 
-void mkd(const char *fn){
-	int i;
-	char dn[FNLEN];
-	for(i=0;i<FNLEN && fn[i];i++){
-		struct stat st;
-		dn[i]='\0';
-		if(i && fn[i]=='/' && stat(dn,&st)) mkdir(dn,0777);
-		dn[i]=fn[i];
-	}
-}
-
 size_t datadd(const unsigned char *sha,const char *fn){
 	char fni[FNLEN],fno[FNLEN];
 	FILE *fdi;
 	gzFile fdo;
-	struct stat st;
 	sha2fn(sha,fno);
 	snprintf(fni,FNLEN,"%s/%s",dbbdir(),fn);
 	mkd(fno);
@@ -50,8 +34,7 @@ size_t datadd(const unsigned char *sha,const char *fn){
 	}
 	fclose(fdi);
 	gzclose(fdo);
-	if(lstat(fno,&st)) return st.st_size;
-	return 0;
+	return filesize(fno);
 }
 
 void datget(const unsigned char *sha,const char *fno){
@@ -79,9 +62,9 @@ void datdel(const unsigned char *sha){
 
 size_t datsi(const unsigned char *sha){
 	char fn[FNLEN];
-	struct stat st;
+	size_t si;
 	sha2fn(sha,fn);
-	if(lstat(fn,&st)) return st.st_size;
-	error(0,"dat file missing: '%s'",fn);
+	si=filesize(fn);
+	if(!si) error(0,"dat file missing: '%s'",fn);
 	return 0;
 }
