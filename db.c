@@ -130,8 +130,11 @@ void dbload(){
 			switch(df->st.mode){
 			case MS_FILE: {
 				unsigned char sha[SHALEN];
+				struct dbh *dh;
 				gzread(gd,sha,sizeof(unsigned char)*SHALEN);
-				dbhadd(dbhget(sha),dt,df);
+				dh=dbhget(sha);
+				dh->si=datsi(sha);
+				dbhadd(dh,dt,df);
 			} break;
 			case MS_LNK: gzread(gd,df->lnk,sizeof(char)*FNLEN); break;
 			case MS_DIR: break;
@@ -256,7 +259,7 @@ struct dbh *dbhget(unsigned char *sha){
 	db.dh[ch]=dh;
 	memcpy(dh->sha,sha,SHALEN);
 	dh->hf=NULL;
-	dh->si=datsi(sha);
+	dh->si=0;
 	return dh;
 }
 
@@ -274,6 +277,7 @@ void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df){
 
 unsigned char *dbhgetsha(struct dbh *dh){ return dh?dh->sha:NULL; }
 size_t dbhgetsi(struct dbh *dh){ return dh->si; }
+void dbhsetsi(struct dbh *dh,size_t si){ dh->si=si; }
 
 char dbhexdt(struct dbh *dh,struct dbt *dt){
 	struct dbhf *hf;

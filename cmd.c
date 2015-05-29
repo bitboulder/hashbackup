@@ -115,9 +115,11 @@ int cifile(const char *fn,void *vdt){
 			if(dh) dbhadd(dh,dt,df);
 		}else{
 			unsigned char sha[SHALEN];
+			struct dbh *dh;
 			shaget(fn,sha);
-			datadd(sha,fn);
-			dbhadd(dbhget(sha),dt,df);
+			dh=dbhget(sha);
+			if(!dbhgetsi(dh)) dbhsetsi(dh,datadd(sha,fn));
+			dbhadd(dh,dt,df);
 		}
 	break;
 	case MS_DIR: break;
