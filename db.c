@@ -54,7 +54,9 @@ struct db {
 };
 
 int fkey(const char *fn){
-	return 0;
+	unsigned char sha[SHALEN];
+	shafn(fn,sha);
+	return (*(unsigned int*)sha)%HNCH;
 }
 
 char *fnrmnewline(char *fn){
@@ -69,6 +71,7 @@ void dbload(){
 	DIR *dd;
 	struct dirent *di;
 	gzFile gd;
+	printf("[dbload]\n");
 	if(!(fd=fopen("basedir","r"))) return;
 	if(!fgets(db.bdir,FNLEN,fd)) return;
 	fclose(fd);
@@ -116,6 +119,7 @@ void dbtsave(struct dbt *dt){
 	unsigned int v;
 	int ch;
 	struct dbf *df;
+	printf("[dbtsave]\n");
 	snprintf(fn,FNLEN,DD "/%li.dbt",dt->t);
 	if(!(fd=gzopen(fn,"wb"))) error(1,"db open failed for '%s'",fn);
 	v=MARKER;  gzwrite(fd,&v,sizeof(unsigned int));

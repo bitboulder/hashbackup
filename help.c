@@ -111,3 +111,7 @@ char shaget(const char *fn,unsigned char *sha){
 	return 0;
 }
 
+void shafn(const char *fn,unsigned char *sha){
+	size_t l=strlen(fn);
+	SHA((const unsigned char*)fn,l,sha);
+}

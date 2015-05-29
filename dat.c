@@ -13,7 +13,7 @@
 
 #define BUFLEN	(1024*1024)
 
-void shafn(const unsigned char *sha,char *fn){
+void sha2fn(const unsigned char *sha,char *fn){
 	snprintf(fn,FNLEN,DH "/%02x/%02x/%016lx%016lx%02x",
 		sha[0],sha[1],
 		*(uint64_t*)(sha+2),
@@ -37,7 +37,7 @@ void datadd(const unsigned char *sha,const char *fn){
 	struct stat st;
 	FILE *fdi;
 	gzFile fdo;
-	shafn(sha,fno);
+	sha2fn(sha,fno);
 	if(!stat(fno,&st)) return;
 	snprintf(fni,FNLEN,"%s/%s",dbbdir(),fn);
 	mkd(fno);
@@ -56,7 +56,7 @@ void datget(const unsigned char *sha,const char *fno){
 	char fni[FNLEN];
 	gzFile fdi;
 	FILE *fdo;
-	shafn(sha,fni);
+	sha2fn(sha,fni);
 	mkd(fno);
 	if(!(fdi=gzopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return; }
 	if(!(fdo=fopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return; }
@@ -71,14 +71,14 @@ void datget(const unsigned char *sha,const char *fno){
 
 void datdel(const unsigned char *sha){
 	char fn[FNLEN];
-	shafn(sha,fn);
+	sha2fn(sha,fn);
 	unlink(fn);
 }
 
 size_t datsi(const unsigned char *sha){
 	char fn[FNLEN];
 	struct st st;
-	shafn(sha,fn);
+	sha2fn(sha,fn);
 	if(statget(0,fn,&st)) return st.size;
 	error(0,"dat file missing: '%s'",fn);
 	return 0;

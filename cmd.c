@@ -10,6 +10,7 @@
 
 void init(const char *basedir){
 	FILE *fd;
+	printf("[init]\n");
 	mkd(DD "/");
 	mkd(DH "/");
 	if(!(fd=fopen("basedir","w"))) error(1,"basedir open failed");
@@ -38,6 +39,7 @@ void tlistt(struct dbt *dt){
 
 void tlist(){
 	struct dbt *dt=NULL;
+	printf("[tlist]\n");
 	while((dt=dbtgetnxt(dt))) tlistt(dt);
 }
 
@@ -54,6 +56,7 @@ void flistt(struct dbt *dt){
 }
 
 void flist(const char *stime){
+	printf("[flist %s]\n",stime);
 	if(stime) flistt(timeparse(stime));
 	else{
 		struct dbt *dt=NULL;
@@ -82,6 +85,7 @@ struct dbt *timenewest(const char *stime){
 char difft(struct dbt *dt){
 	struct dbf *df;
 	int chg;
+	printf("[diff %s]\n",timefmt(dbtgett(dt)));
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
 	chg=dirrec(dbbdir(),"",difile,dt);
 	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ printf("del: %s\n",dbfgetfn(df)); chg++; }
@@ -121,6 +125,7 @@ void commit(){
 	dt[0]=dbtgetnewest();
 	if(dt[0] && !difft(dt[0])) error(1,"no changes -> no commit");
 	dt[1]=dbtnew(0);
+	printf("[commit %s]\n",timefmt(dbtgett(dt[1])));
 	dirrec(dbbdir(),"",cifile,dt);
 	dbtsave(dt[1]);
 	tlistt(dt[1]);
@@ -129,6 +134,7 @@ void commit(){
 void restore(const char *dstdir,const char *stime){
 	struct dbt *dt=timenewest(stime);
 	struct dbf *df=NULL;
+	printf("[restore %s -> %s]\n",timefmt(dbtgett(dt)),dstdir);
 	while((df=dbfgetnxt(dt,df))){
 		struct st *st=dbfgetst(df);
 		char fn[FNLEN];
@@ -146,6 +152,7 @@ void restore(const char *dstdir,const char *stime){
 void del(const char *stime){
 	struct dbt *dt=timeparse(stime);
 	struct dbf *df=NULL;
+	printf("[del %s]\n",timefmt(dbtgett(dt)));
 	tlistt(dt);
 	while((df=dbfgetnxt(dt,df))){
 		struct dbh *dh=dbfgeth(df);
@@ -155,6 +162,7 @@ void del(const char *stime){
 }
 
 void dbcheck(){
+	printf("[dbcheck]\n");
 	
 }
 
