@@ -18,6 +18,10 @@ void init(const char *basedir){
 	fclose(fd);
 }
 
+void setexc(const char *pat){
+	/* TODO */
+}
+
 void tlistt(struct dbt *dt){
 	int nf=0;
 	struct dbf *df=NULL;
@@ -77,7 +81,7 @@ int difile(const char *fn,void *vdt){
 
 struct dbt *timenewest(const char *stime){
 	struct dbt *dt;
-	if(!stime){ if(!(dt=dbtgetnewest())) error(1,"no time found in db"); }
+	if(!stime || !stime[0]){ if(!(dt=dbtgetnewest())) error(1,"no time found in db"); }
 	else if(!(dt=timeparse(stime))) error(1,"unkown time: '%s'",stime);
 	return dt;
 }
@@ -131,21 +135,28 @@ void commit(){
 	tlistt(dt[1]);
 }
 
-void restore(const char *dstdir,const char *stime){
+void restoref(struct dbf *df,const char *dstdir){
+	struct st *st=dbfgetst(df);
+	char fn[FNLEN];
+	snprintf(fn,FNLEN,"%s/%s%s",dstdir,dbfgetfn(df),st->mode==MS_DIR?"/":"");
+	switch(st->mode){
+	case MS_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break;
+	case MS_DIR: mkd(fn); break;
+	case MS_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
+	case MS_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
+	}
+	statset(st,fn);
+}
+
+void restore(const char *fn,const char *stime,const char *dstdir){
 	struct dbt *dt=timenewest(stime);
 	struct dbf *df=NULL;
-	printf("[restore %s -> %s]\n",timefmt(dbtgett(dt)),dstdir);
-	while((df=dbfgetnxt(dt,df))){
-		struct st *st=dbfgetst(df);
-		char fn[FNLEN];
-		snprintf(fn,FNLEN,"%s/%s%s",dstdir,dbfgetfn(df),st->mode==MS_DIR?"/":"");
-		switch(st->mode){
-		case MS_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break;
-		case MS_DIR: mkd(fn); break;
-		case MS_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
-		case MS_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
-		}
-		statset(st,fn);
+	if(!dstdir) dstdir="restore";
+	printf("[restore %s (%s) -> %s]\n",timefmt(dbtgett(dt)),fn&&fn[0]?fn:"all",dstdir);
+	if(!fn || !fn[0]) while((df=dbfgetnxt(dt,df))) restoref(df,dstdir);
+	else{
+		if(!(df=dbfget(dt,fn))) error(1,"file not found: '%s'\n",fn);
+		restoref(df,dstdir);
 	}
 }
 
