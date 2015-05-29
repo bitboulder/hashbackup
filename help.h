@@ -10,7 +10,7 @@ struct st {
 	time_t mtime,ctime;
 };
 
-int dirrec(const char *bdir,const char *dir,int (*fnc)(const char*,void *),void *arg);
+int dirrec(const char *bdir,char ex,const char *dir,int (*fnc)(const char*,void *),void *arg);
 struct dbt *timeparse(const char *stime);
 const char *timefmt(time_t t);
 const char *sizefmt(size_t si);

@@ -19,8 +19,7 @@ void error(char quit,const char *fmt,...){
 
 void usage(const char *prg){
 	printf("Usage: %s COMMAND ARGUMENTS\n",prg);
-	printf("       init    BASEDIR\n");
-	printf("       setexc  PATTERN{|PATTERN}\n");
+	printf("       init    BASEDIR [EXPATTERN{|EXPATTERN}]\n");
 	printf("       tlist   [TIMESPEC]\n");
 	printf("       flist   [TIMESPEC]\n");
 	printf("       diff    [TIMESPEC]\n");
@@ -39,11 +38,7 @@ int main(int argc,char **argv){
 	cmd=argv[1];
 	if(!strncmp(cmd,"init",3)){
 		if(argc<3) usage(argv[0]);
-		init(argv[2]);
-	}
-	else if(!strncmp(cmd,"setexc",4)){
-		if(argc<3) usage(argv[0]);
-		setexc(argv[2]);
+		init(argv[2],argc<4?NULL:argv[3]);
 	}
 	else if(!strncmp(cmd,"tlist",4)){ tlist(argc<3?NULL:argv[2]); }
 	else if(!strncmp(cmd,"flist",4)){ flist(argc<3?NULL:argv[2]); }

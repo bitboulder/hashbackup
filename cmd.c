@@ -8,18 +8,20 @@
 #include "help.h"
 #include "dat.h"
 
-void init(const char *basedir){
+void init(const char *basedir,const char *exclude){
 	FILE *fd;
-	printf("[init]\n");
+	printf("[init %s",basedir);
+	if(exclude) printf(" (%s)",exclude);
+	printf("]\n");
 	mkd(DD "/");
 	mkd(DH "/");
 	if(!(fd=fopen("basedir","w"))) error(1,"basedir open failed");
 	fprintf(fd,"%s\n",basedir);
 	fclose(fd);
-}
-
-void setexc(const char *pat){
-	/* TODO */
+	if(!exclude) return;
+	if(!(fd=fopen("exclude","w"))) error(1,"exclude open failed");
+	fprintf(fd,"%s\n",exclude);
+	fclose(fd);
 }
 
 void tlistt(struct dbt *dt){
@@ -91,7 +93,7 @@ char difft(struct dbt *dt){
 	int chg;
 	printf("[diff %s]\n",timefmt(dbtgett(dt)));
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
-	chg=dirrec(dbbdir(),"",difile,dt);
+	chg=dirrec(dbbdir(),1,"",difile,dt);
 	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ printf("del: %s\n",dbfgetfn(df)); chg++; }
 	return chg!=0;
 }
@@ -130,7 +132,7 @@ void commit(){
 	if(dt[0] && !difft(dt[0])) error(1,"no changes -> no commit");
 	dt[1]=dbtnew(0);
 	printf("[commit %s]\n",timefmt(dbtgett(dt[1])));
-	dirrec(dbbdir(),"",cifile,dt);
+	dirrec(dbbdir(),1,"",cifile,dt);
 	dbtsave(dt[1]);
 	tlistt(dt[1]);
 }

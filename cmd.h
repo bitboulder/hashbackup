@@ -1,8 +1,7 @@
 #ifndef _CMD_H
 #define _CMD_H
 
-void init(const char *basedir);
-void setexc(const char *pat);
+void init(const char *basedir,const char *exclude);
 void tlist();
 void flist(const char *stime);
 void diff(const char *stime);

@@ -14,6 +14,7 @@ void dbload();
 void dbtsave(struct dbt *dt);
 
 const char *dbbdir();
+char dbex(const char *fn);
 
 struct dbt *dbtnew(time_t t);
 struct dbt *dbtget(time_t t);
