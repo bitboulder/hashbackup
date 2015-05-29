@@ -56,7 +56,8 @@ void flistt(struct dbt *dt){
 		int i;
 		unsigned char *sha=dbhgetsha(dbfgeth(df));
 		printf("  ");
-		for(i=0;i<SHALEN;i++) printf("%02x",sha[i]);
+		if(sha) for(i=0;i<SHALEN;i++) printf("%02x",sha[i]);
+		else printf("%40s","");
 		printf(" %s\n",dbfgetfn(df));
 	}
 }

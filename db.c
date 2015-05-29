@@ -272,7 +272,7 @@ void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df){
 	hf->df=df;
 }
 
-unsigned char *dbhgetsha(struct dbh *dh){ return dh->sha; }
+unsigned char *dbhgetsha(struct dbh *dh){ return dh?dh->sha:NULL; }
 size_t dbhgetsi(struct dbh *dh){ return dh->si; }
 
 char dbhexdt(struct dbh *dh,struct dbt *dt){
