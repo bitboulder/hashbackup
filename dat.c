@@ -66,5 +66,5 @@ size_t datsi(const unsigned char *sha){
 	sha2fn(sha,fn);
 	si=filesize(fn);
 	if(!si) error(0,"dat file missing: '%s'",fn);
-	return 0;
+	return si;
 }
