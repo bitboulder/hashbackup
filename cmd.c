@@ -46,12 +46,14 @@ void tlistt(struct dbt *dt){
 void tlist(){
 	struct dbt *dt=NULL;
 	printf("[tlist]\n");
+	/* TODO: sort by time */
 	while((dt=dbtgetnxt(dt))) tlistt(dt);
 }
 
 void flistt(struct dbt *dt){
 	struct dbf *df=NULL;
 	printf("t %lu\n",dbtgett(dt));
+	/* TODO: sort by fn */
 	while((df=dbfgetnxt(dt,df))){
 		int i;
 		unsigned char *sha=dbhgetsha(dbfgeth(df));
@@ -67,6 +69,7 @@ void flist(const char *stime){
 	if(stime) flistt(timeparse(stime));
 	else{
 		struct dbt *dt=NULL;
+		/* TODO: sort by time */
 		while((dt=dbtgetnxt(dt))) flistt(dt);
 	}
 }
@@ -99,6 +102,7 @@ char difft(struct dbt *dt){
 	return chg!=0;
 }
 
+/* TODO: diffsha */
 void diff(const char *stime){ difft(timenewest(stime)); }
 
 int cifile(const char *fn,enum fmode mode,void *vdt){
@@ -116,6 +120,7 @@ int cifile(const char *fn,enum fmode mode,void *vdt){
 		}else{
 			unsigned char sha[SHALEN];
 			struct dbh *dh;
+			/* TODO: sort by file pos */
 			shaget(fn,sha);
 			if(!(dh=dbhget(sha))) dh=dbhnew(sha,datadd(sha,fn));
 			dbhadd(dh,dt,df);
@@ -144,7 +149,7 @@ void restoref(struct dbf *df,const char *dstdir){
 	char fn[FNLEN];
 	snprintf(fn,FNLEN,"%s/%s%s",dstdir,dbfgetfn(df),st->mode==MS_DIR?"/":"");
 	switch(st->mode){
-	case MS_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break;
+	case MS_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break; /* TODO: sort by file pos */
 	case MS_DIR: mkd(fn); break;
 	case MS_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
 	case MS_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
@@ -160,6 +165,7 @@ void restore(const char *fn,const char *stime,const char *dstdir){
 	if(!fn || !fn[0]) while((df=dbfgetnxt(dt,df))) restoref(df,dstdir);
 	else{
 		if(!(df=dbfget(dt,fn))) error(1,"file not found: '%s'\n",fn);
+		/* TODO: restore recursive from dir */
 		restoref(df,dstdir);
 	}
 }
@@ -171,6 +177,7 @@ void del(const char *stime){
 	tlistt(dt);
 	while((df=dbfgetnxt(dt,df))){
 		struct dbh *dh=dbfgeth(df);
+		/* TODO: sort by inode */
 		if(dbfgetst(df)->mode==MS_FILE && dbhexdt(dh,dt)) datdel(dbhgetsha(dh));
 	}
 	dbtdel(dt);
@@ -188,6 +195,7 @@ void dbcheck(){
 		sha2fn(dbhgetsha(dh),fn);
 		if(dbhgetmk(dh)){
 			unsigned char sha[SHALEN];
+			/* TODO: sort by file pos */
 			shagetdb(fn,sha);
 			if(memcmp(sha,dbhgetsha(dh),SHALEN)) error(0,"sha missmatch: '%s'",fn);
 		}else error(0,"unused file: '%s'",fn);

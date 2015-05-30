@@ -20,6 +20,7 @@ int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*
 	int ret=0;
 	snprintf(dn,FNLEN,"%s/%s",bdir,dir);
 	if(!(dd=opendir(dn))){ error(0,"opendir failed for '%s'",dn); return 0; }
+	/* TODO: sort by inode */
 	while((di=readdir(dd))){
 		char fn[FNLEN];
 		enum fmode mode;
