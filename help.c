@@ -52,9 +52,9 @@ char statget(char bdir,const char *fn,struct st *st){
 		return 0;
 	}
 	memset(st,0,sizeof(struct st));
-	if(S_ISREG(s.st_mode)) st->mode=MS_FILE;
-	if(S_ISDIR(s.st_mode)) st->mode=MS_DIR;
-	if(S_ISLNK(s.st_mode)) st->mode=MS_LNK;
+	if(S_ISREG(s.st_mode)) st->typ=FT_FILE;
+	if(S_ISDIR(s.st_mode)) st->typ=FT_DIR;
+	if(S_ISLNK(s.st_mode)) st->typ=FT_LNK;
 	st->uid=s.st_uid;
 	st->gid=s.st_gid;
 	st->size=s.st_size;

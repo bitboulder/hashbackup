@@ -26,9 +26,9 @@ struct dbh {
 
 unsigned int hkey(unsigned char *sha){ return (*(unsigned int*)sha)%HNCH; }
 
-int dbhloadh(const char *fn,enum fmode mode,void *arg){
+int dbhloadh(const char *fn,enum ftyp typ,void *arg){
 	unsigned char sha[SHALEN];
-	if(mode!=MS_FILE) return 0;
+	if(typ!=FT_FILE) return 0;
 	fn2sha(fn,sha);
 	dbhnew(sha,filesize(fn));
 	return 1;

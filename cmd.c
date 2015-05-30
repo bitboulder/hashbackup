@@ -76,7 +76,7 @@ void flist(const char *stime){
 	}
 }
 
-int difile(const char *fn,enum fmode mode,void *vdt){
+int difile(const char *fn,enum ftyp typ,void *vdt){
 	struct dbt *dt=(struct dbt*)vdt;
 	struct dbf *df;
 	struct st st;
@@ -107,15 +107,15 @@ char difft(struct dbt *dt){
 /* TODO: diffsha */
 void diff(const char *stime){ difft(timenewest(stime)); }
 
-int cifile(const char *fn,enum fmode mode,void *vdt){
+int cifile(const char *fn,enum ftyp typ,void *vdt){
 	struct dbt *dtn=((struct dbt**)vdt)[0];
 	struct dbt *dt =((struct dbt**)vdt)[1];
 	struct dbf *df=dbfnew(dt,fn);
 	struct dbf *dfn=dtn?dbfget(dtn,fn):NULL;
 	struct st *st;
 	statget(1,fn,st=dbfgetst(df));
-	switch(st->mode){
-	case MS_FILE:
+	switch(st->typ){
+	case FT_FILE:
 		if(dfn && !memcmp(st,dbfgetst(dfn),sizeof(struct st))){
 			struct dbh *dh=dbfgeth(dfn);
 			if(dh) dbhadd(dh,dt,df);
@@ -128,9 +128,9 @@ int cifile(const char *fn,enum fmode mode,void *vdt){
 			dbhadd(dh,dt,df);
 		}
 	break;
-	case MS_DIR: break;
-	case MS_LNK: lnkget(fn,dbfgetlnk(df)); break;
-	case MS_NONE: error(0,"no backup for none regular file: '%s'",fn);
+	case FT_DIR: break;
+	case FT_LNK: lnkget(fn,dbfgetlnk(df)); break;
+	case FT_NONE: error(0,"no backup for none regular file: '%s'",fn);
 	}
 	return 0;
 }
@@ -149,12 +149,12 @@ void commit(){
 void restoref(struct dbf *df,const char *dstdir){
 	struct st *st=dbfgetst(df);
 	char fn[FNLEN];
-	snprintf(fn,FNLEN,"%s/%s%s",dstdir,dbfgetfn(df),st->mode==MS_DIR?"/":"");
-	switch(st->mode){
-	case MS_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break; /* TODO: sort by file pos */
-	case MS_DIR: mkd(fn); break;
-	case MS_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
-	case MS_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
+	snprintf(fn,FNLEN,"%s/%s%s",dstdir,dbfgetfn(df),st->typ==FT_DIR?"/":"");
+	switch(st->typ){
+	case FT_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break; /* TODO: sort by file pos */
+	case FT_DIR: mkd(fn); break;
+	case FT_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
+	case FT_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
 	}
 	statset(st,fn);
 }
@@ -180,7 +180,7 @@ void del(const char *stime){
 	while((df=dbfgetnxt(dt,df))){
 		struct dbh *dh=dbfgeth(df);
 		/* TODO: sort by inode */
-		if(dbfgetst(df)->mode==MS_FILE && dbhexdt(dh,dt)) datdel(dbhgetsha(dh));
+		if(dbfgetst(df)->typ==FT_FILE && dbhexdt(dh,dt)) datdel(dbhgetsha(dh));
 	}
 	dbtdel(dt);
 }

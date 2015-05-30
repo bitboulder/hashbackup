@@ -6,7 +6,7 @@
 #include "ex.h"
 
 struct st {
-	enum fmode { MS_NONE, MS_FILE, MS_DIR, MS_LNK } mode;
+	enum ftyp { FT_NONE, FT_FILE, FT_DIR, FT_LNK } typ;
 	uint32_t uid,gid;
 	size_t size;
 	time_t mtime,ctime;

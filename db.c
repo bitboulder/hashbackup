@@ -87,8 +87,8 @@ void dbload(){
 		while(gzgets(gd,ffn,FNLEN) && ffn[0]!='\n' && ffn[0]){
 			struct dbf *df=dbfnew(dt,fnrmnewline(ffn));
 			gzread(gd,&df->st,sizeof(struct st));
-			switch(df->st.mode){
-			case MS_FILE: {
+			switch(df->st.typ){
+			case FT_FILE: {
 				unsigned char sha[SHALEN];
 				struct dbh *dh;
 				gzread(gd,sha,sizeof(unsigned char)*SHALEN);
@@ -99,9 +99,9 @@ void dbload(){
 					error(0,"dat file missing: '%s'",fn);
 				}else dbhadd(dh,dt,df);
 			} break;
-			case MS_LNK: gzread(gd,df->lnk,sizeof(char)*FNLEN); break;
-			case MS_DIR: break;
-			case MS_NONE: break;
+			case FT_LNK: gzread(gd,df->lnk,sizeof(char)*FNLEN); break;
+			case FT_DIR: break;
+			case FT_NONE: break;
 			}
 		}
 		gzclose(gd);
@@ -124,11 +124,11 @@ void dbtsave(struct dbt *dt){
 	for(ch=0;ch<HNCH;ch++) for(df=dt->fhsh[ch];df;df=df->nxt){
 		gzprintf(fd,"%s\n",df->fn);
 		gzwrite(fd,&df->st,sizeof(struct st));
-		switch(df->st.mode){
-		case MS_FILE: gzwrite(fd,dbhgetsha(df->dh),sizeof(unsigned char)*SHALEN); break;
-		case MS_LNK: gzwrite(fd,df->lnk,sizeof(char)*FNLEN); break;
-		case MS_DIR: break;
-		case MS_NONE: break;
+		switch(df->st.typ){
+		case FT_FILE: gzwrite(fd,dbhgetsha(df->dh),sizeof(unsigned char)*SHALEN); break;
+		case FT_LNK: gzwrite(fd,df->lnk,sizeof(char)*FNLEN); break;
+		case FT_DIR: break;
+		case FT_NONE: break;
 		}
 	}
 	gzprintf(fd,"\n");

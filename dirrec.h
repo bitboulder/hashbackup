@@ -3,6 +3,6 @@
 
 #include "help.h"
 
-int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,enum fmode,void *),void *arg);
+int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,enum ftyp,void *),void *arg);
 
 #endif

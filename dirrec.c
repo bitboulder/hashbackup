@@ -9,7 +9,7 @@
 struct dri {
 	size_t ino;
 	char fn[FNLEN];
-	enum fmode mode;
+	enum ftyp typ;
 };
 
 struct dris {
@@ -82,10 +82,10 @@ void drdir(struct dr *dr,const char *dir,size_t ino){
 		snprintf(d->fn,FNLEN,"%s/%s",dir,di->d_name);
 		if(exfn(dr->ex,d->fn)){ free(d); continue; }
 		switch(di->d_type){
-		case DT_REG: d->mode=MS_FILE; break;
-		case DT_DIR: d->mode=MS_DIR; break;
-		case DT_LNK: d->mode=MS_LNK; break;
-		default: d->mode=MS_NONE; break;
+		case DT_REG: d->typ=FT_FILE; break;
+		case DT_DIR: d->typ=FT_DIR; break;
+		case DT_LNK: d->typ=FT_LNK; break;
+		default: d->typ=FT_NONE; break;
 		}
 		d->ino=di->d_ino;
 		drisput(d->ino<ino ? &dr->dnxt : &dr->dcur,d);
@@ -93,7 +93,7 @@ void drdir(struct dr *dr,const char *dir,size_t ino){
 	closedir(dd);
 }
 
-int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,enum fmode,void *),void *arg){
+int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,enum ftyp,void *),void *arg){
 	struct dr dr={
 		.bdir=bdir,
 		.ex=ex,
@@ -106,8 +106,8 @@ int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*
 		struct dri *d;
 		struct dris ds;
 		while((d=drispop(&dr.dcur))){
-			if(d->mode==MS_DIR) drdir(&dr,d->fn,d->ino);
-			ret+=fnc(d->fn,d->mode,arg);
+			if(d->typ==FT_DIR) drdir(&dr,d->fn,d->ino);
+			ret+=fnc(d->fn,d->typ,arg);
 			free(d);
 		}
 		ds=dr.dcur;
