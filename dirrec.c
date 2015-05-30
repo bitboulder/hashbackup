@@ -36,8 +36,25 @@ void drisresize(struct dris *ds){
 }
 
 void drisheapify(struct dris *ds,struct dri *d,size_t pn){
-	/* TODO */
-	ds->d[pn]=d;
+	register size_t p=pn;
+	register size_t ino=d->ino;
+	while(p>1){
+		register size_t p2=p>>1;
+		if(ds->d[p2]->ino<=ino) break;
+		ds->d[p]=ds->d[p2];
+		p=p2;
+	}
+	while(1){
+		register size_t i2,i3;
+		register size_t p3,p2=p<<1;
+		if(p2>ds->used) break;
+		i2=ds->d[p2]->ino;
+		i3=(p3=p2+1)>ds->used ? SIZE_MAX : ds->d[p3]->ino;
+		if(i3>ino){ if(i2>=i3) p2=p3; }else if(i2>=ino) break;
+		ds->d[p]=ds->d[p2];
+		p=p2;
+	}
+	ds->d[p]=d;
 }
 
 void drisput(struct dris *ds,struct dri *d){
