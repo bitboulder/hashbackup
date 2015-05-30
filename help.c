@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <openssl/sha.h>
+#include <zlib.h>
 
 #include "help.h"
 #include "main.h"
@@ -74,10 +75,7 @@ const char *sizefmt(size_t si){
 char statget(char bdir,const char *fn,struct st *st){
 	char ffn[FNLEN];
 	struct stat s;
-	if(bdir){
-		snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
-		fn=ffn;
-	}
+	if(bdir){ snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn); fn=ffn; }
 	if(lstat(fn,&s)){
 		error(0,"file stat failed for '%s'",fn);
 		return 0;
@@ -126,12 +124,12 @@ void lnkset(const char *lnk,const char *fn){
 }
 
 #define BUFLEN	8192
-char shaget(const char *fn,unsigned char *sha){
+void shaget(const char *fn,unsigned char *sha){
 	char ffn[FNLEN];
 	FILE *fd;
 	SHA_CTX c;
 	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
-	if(!(fd=fopen(ffn,"rb"))){ error(0,"file open failed for '%s'",ffn); return 0; }
+	if(!(fd=fopen(ffn,"rb"))){ error(0,"file open failed for '%s'",ffn); return; }
 	SHA1_Init(&c);
 	while(!feof(fd)){
 		char buf[BUFLEN];
@@ -140,12 +138,25 @@ char shaget(const char *fn,unsigned char *sha){
 	}
 	SHA1_Final(sha,&c);
 	fclose(fd);
-	return 0;
 }
 
-void shafn(const char *fn,unsigned char *sha){
-	size_t l=strlen(fn);
-	SHA((const unsigned char*)fn,l,sha);
+void shagetdb(const char *fn,unsigned char *sha){
+	gzFile fd;
+	SHA_CTX c;
+	if(!(fd=gzopen(fn,"rb"))){ error(0,"file open failed for '%s'",fn); return; }
+	SHA1_Init(&c);
+	while(!gzeof(fd)){
+		char buf[BUFLEN];
+		size_t r=gzread(fd,buf,BUFLEN);
+		SHA1_Update(&c,buf,r);
+	}
+	SHA1_Final(sha,&c);
+	gzclose(fd);
+}
+
+void shastr(const char *str,unsigned char *sha){
+	size_t l=strlen(str);
+	SHA((const unsigned char*)str,l,sha);
 }
 
 void sha2fn(const unsigned char *sha,char *fn){

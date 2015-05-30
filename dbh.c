@@ -19,7 +19,10 @@ struct dbh {
 	unsigned char sha[SHALEN];
 	struct dbhf *hf;
 	size_t si;
+	char mk;
 } *dbh[HNCH]={NULL};
+
+unsigned int hkey(unsigned char *sha){ return (*(unsigned int*)sha)%HNCH; }
 
 int dbhloadh(const char *fn,enum fmode mode,void *arg){
 	unsigned char sha[SHALEN];
@@ -34,7 +37,7 @@ void dbhload(){
 }
 
 struct dbh *dbhnew(unsigned char *sha,size_t si){
-	unsigned int ch=(*(unsigned int*)sha)%HNCH;
+	unsigned int ch=hkey(sha);
 	struct dbh *dh=malloc(sizeof(struct dbh));
 	dh->nxt=dbh[ch];
 	dbh[ch]=dh;
@@ -45,7 +48,7 @@ struct dbh *dbhnew(unsigned char *sha,size_t si){
 }
 
 struct dbh *dbhget(unsigned char *sha){
-	unsigned int ch=(*(unsigned int*)sha)%HNCH;
+	unsigned int ch=hkey(sha);
 	struct dbh *dh=dbh[ch];
 	while(dh && memcmp(dh->sha,sha,SHALEN)) dh=dh->nxt;
 	return dh;
@@ -63,8 +66,18 @@ void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df){
 	hf->df=df;
 }
 
+struct dbh *dbhgetnxt(struct dbh *dh){
+	int ch;
+	if(dh && dh->nxt) return dh->nxt;
+	ch = dh ? hkey(dh->sha)+1 : 0;
+	for(;ch<HNCH;ch++) if(dbh[ch]) return dbh[ch];
+	return NULL;
+}
+
 unsigned char *dbhgetsha(struct dbh *dh){ return dh?dh->sha:NULL; }
 size_t dbhgetsi(struct dbh *dh){ return dh->si; }
+char dbhgetmk(struct dbh *dh){ return dh->mk; }
+void dbhsetmk(struct dbh *dh,char mk){ dh->mk=mk; }
 
 char dbhexdt(struct dbh *dh,struct dbt *dt){
 	struct dbhf *hf;

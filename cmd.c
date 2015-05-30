@@ -177,7 +177,20 @@ void del(const char *stime){
 }
 
 void dbcheck(){
+	struct dbh *dh;
+	struct dbt *dt;
+	struct dbf *df;
 	printf("[dbcheck]\n");
-	
+	for(dh=NULL;(dh=dbhgetnxt(dh));) dbhsetmk(dh,0);
+	for(dt=NULL;(dt=dbtgetnxt(dt));) for(df=NULL;(df=dbfgetnxt(dt,df));) if((dh=dbfgeth(df))) dbhsetmk(dh,1);
+	for(dh=NULL;(dh=dbhgetnxt(dh));){
+		char fn[FNLEN];
+		sha2fn(dbhgetsha(dh),fn);
+		if(dbhgetmk(dh)){
+			unsigned char sha[SHALEN];
+			shagetdb(fn,sha);
+			if(memcmp(sha,dbhgetsha(dh),SHALEN)) error(0,"sha missmatch: '%s'",fn);
+		}else error(0,"unused file: '%s'",fn);
+	}
 }
 

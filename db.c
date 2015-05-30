@@ -44,7 +44,7 @@ struct db {
 
 int fkey(const char *fn){
 	unsigned char sha[SHALEN];
-	shafn(fn,sha);
+	shastr(fn,sha);
 	return (*(unsigned int*)sha)%HNCH;
 }
 
