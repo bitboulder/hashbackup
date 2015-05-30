@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <utime.h>
 
 #include "help.h"
 #include "main.h"
@@ -57,14 +58,21 @@ char statget(char bdir,const char *fn,struct st *st){
 	if(S_ISLNK(s.st_mode)) st->typ=FT_LNK;
 	st->uid=s.st_uid;
 	st->gid=s.st_gid;
+	st->mode=s.st_mode;
 	st->size=s.st_size;
+	st->atime=s.st_atime;
 	st->mtime=s.st_mtime;
 	st->ctime=s.st_ctime;
 	return 1;
 }
 
 void statset(struct st *st,const char *fn){
-	/* TODO */
+	struct utimbuf utim={.actime=st->atime, .modtime=st->mtime};
+	lchown(fn,st->uid,st->gid);
+	chmod(fn,st->mode); /* TODO: lchmod ?? */
+	utime(fn,&utim); /* TODO: lutime ?? */
+	/* TODO ctime */
+	/* TODO check errors */
 }
 
 size_t filesize(const char *fn){

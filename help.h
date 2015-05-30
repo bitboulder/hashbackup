@@ -7,9 +7,9 @@
 
 struct st {
 	enum ftyp { FT_NONE, FT_FILE, FT_DIR, FT_LNK } typ;
-	uint32_t uid,gid;
+	uint32_t uid,gid,mode;
 	size_t size;
-	time_t mtime,ctime;
+	time_t atime,mtime,ctime;
 };
 
 char *fnrmnewline(char *fn);
