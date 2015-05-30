@@ -6,6 +6,7 @@
 #include "main.h"
 #include "help.h"
 #include "sha.h"
+#include "dirrec.h"
 
 #define HNCH	8192
 

@@ -12,7 +12,6 @@ struct st {
 	time_t mtime,ctime;
 };
 
-int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,enum fmode,void *),void *arg);
 char *fnrmnewline(char *fn);
 struct dbt *timeparse(const char *stime);
 const char *timefmt(time_t t);

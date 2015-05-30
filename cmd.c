@@ -7,6 +7,7 @@
 #include "db.h"
 #include "help.h"
 #include "sha.h"
+#include "dirrec.h"
 #include "dat.h"
 
 void init(const char *basedir,const char *exclude){
