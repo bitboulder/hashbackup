@@ -63,13 +63,14 @@ int fkey(const char *fn){
 	return (*(unsigned int*)sha)%HNCH;
 }
 
-void dbloadbdir(){
+char dbloadbdir(){
 	FILE *fd;
-	if(!(fd=fopen("basedir","r"))) return;
-	if(!fgets(db.bdir,FNLEN,fd)) return;
+	if(!(fd=fopen("basedir","r"))) return 0;
+	if(!fgets(db.bdir,FNLEN,fd)) return 0;
 	fclose(fd);
 	db.bdir[FNLEN-1]='\0';
 	fnrmnewline(db.bdir);
+	return 1;
 }
 
 void dbload(){
@@ -77,8 +78,9 @@ void dbload(){
 	struct dirent *di;
 	gzFile gd;
 	printf("[dbload]\n");
-	dbloadbdir();
+	if(!dbloadbdir()) return;
 	db.ex=exload("exclude");
+	dbhload();
 	if(!(dd=opendir(DD))) return;
 	while((di=readdir(dd))){
 		char fn[FNLEN];
@@ -105,8 +107,11 @@ void dbload(){
 				struct dbh *dh;
 				gzread(gd,sha,sizeof(unsigned char)*SHALEN);
 				dh=dbhget(sha);
-				dh->si=datsi(sha);
-				dbhadd(dh,dt,df);
+				if(!dh){
+					char fn[FNLEN];
+					sha2fn(sha,fn);
+					error(0,"dat file missing: '%s'",fn);
+				}else dbhadd(dh,dt,df);
 			} break;
 			case MS_LNK: gzread(gd,df->lnk,sizeof(char)*FNLEN); break;
 			case MS_DIR: break;
@@ -208,17 +213,33 @@ char *dbfgetmk(struct dbf *df){ return &df->mk; }
 struct dbh *dbfgeth(struct dbf *df){ return df->dh; }
 char *dbfgetlnk(struct dbf *df){ return df->lnk; }
 
-struct dbh *dbhget(unsigned char *sha){
+int dbhloadh(const char *fn,enum fmode mode,void *arg){
+	unsigned char sha[SHALEN];
+	if(mode!=MS_FILE) return 0;
+	fn2sha(fn,sha);
+	dbhnew(sha,filesize(fn));
+	return 1;
+}
+
+void dbhload(){
+	dirrec(".",NULL,DH,dbhloadh,NULL);
+}
+
+struct dbh *dbhnew(unsigned char *sha,size_t si){
 	unsigned int ch=(*(unsigned int*)sha)%HNCH;
-	struct dbh *dh=db.dh[ch];
-	while(dh && memcmp(dh->sha,sha,SHALEN)) dh=dh->nxt;
-	if(dh) return dh;
-	dh=malloc(sizeof(struct dbh));
+	struct dbh *dh=malloc(sizeof(struct dbh));
 	dh->nxt=db.dh[ch];
 	db.dh[ch]=dh;
 	memcpy(dh->sha,sha,SHALEN);
 	dh->hf=NULL;
-	dh->si=0;
+	dh->si=si;
+	return dh;
+}
+
+struct dbh *dbhget(unsigned char *sha){
+	unsigned int ch=(*(unsigned int*)sha)%HNCH;
+	struct dbh *dh=db.dh[ch];
+	while(dh && memcmp(dh->sha,sha,SHALEN)) dh=dh->nxt;
 	return dh;
 }
 

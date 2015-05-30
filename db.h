@@ -32,6 +32,8 @@ char *dbfgetmk(struct dbf *df);
 struct dbh *dbfgeth(struct dbf *df);
 char *dbfgetlnk(struct dbf *df);
 
+void dbhload();
+struct dbh *dbhnew(unsigned char *sha,size_t si);
 struct dbh *dbhget(unsigned char *sha);
 void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df);
 unsigned char *dbhgetsha(struct dbh *dh);

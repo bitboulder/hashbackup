@@ -30,7 +30,6 @@ void usage(const char *prg){
 	exit(1);
 }
 
-void mkd(const char *fn);
 int main(int argc,char **argv){
 	char *cmd;
 	dbload();

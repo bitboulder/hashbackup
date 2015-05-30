@@ -117,8 +117,7 @@ int cifile(const char *fn,enum fmode mode,void *vdt){
 			unsigned char sha[SHALEN];
 			struct dbh *dh;
 			shaget(fn,sha);
-			dh=dbhget(sha);
-			if(!dbhgetsi(dh)) dbhsetsi(dh,datadd(sha,fn));
+			if(!(dh=dbhget(sha))) dh=dbhnew(sha,datadd(sha,fn));
 			dbhadd(dh,dt,df);
 		}
 	break;

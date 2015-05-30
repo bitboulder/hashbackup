@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <zlib.h>
 
 #include "dat.h"
@@ -52,11 +53,3 @@ void datdel(const unsigned char *sha){
 	unlink(fn);
 }
 
-size_t datsi(const unsigned char *sha){
-	char fn[FNLEN];
-	size_t si;
-	sha2fn(sha,fn);
-	si=filesize(fn);
-	if(!si) error(0,"dat file missing: '%s'",fn);
-	return si;
-}
