@@ -71,7 +71,7 @@ void flist(const char *stime){
 	}
 }
 
-int difile(const char *fn,void *vdt){
+int difile(const char *fn,enum fmode mode,void *vdt){
 	struct dbt *dt=(struct dbt*)vdt;
 	struct dbf *df;
 	struct st st;
@@ -101,7 +101,7 @@ char difft(struct dbt *dt){
 
 void diff(const char *stime){ difft(timenewest(stime)); }
 
-int cifile(const char *fn,void *vdt){
+int cifile(const char *fn,enum fmode mode,void *vdt){
 	struct dbt *dtn=((struct dbt**)vdt)[0];
 	struct dbt *dt =((struct dbt**)vdt)[1];
 	struct dbf *df=dbfnew(dt,fn);

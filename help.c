@@ -12,7 +12,7 @@
 #include "main.h"
 #include "db.h"
 
-int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,void *),void *arg){
+int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,enum fmode,void *),void *arg){
 	char dn[FNLEN];
 	DIR *dd;
 	struct dirent *di;
@@ -21,11 +21,18 @@ int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*
 	if(!(dd=opendir(dn))){ error(0,"opendir failed for '%s'",dn); return 0; }
 	while((di=readdir(dd))){
 		char fn[FNLEN];
+		enum fmode mode;
 		if(di->d_name[0]=='.' && (!di->d_name[1] || (di->d_name[1]=='.' && !di->d_name[2]))) continue;
 		snprintf(fn,FNLEN,"%s/%s",dir,di->d_name);
 		if(exfn(ex,fn)) continue;
-		ret+=fnc(fn,arg);
-		if((di->d_type&DT_DIR) && !(di->d_type&DT_LNK)) ret+=dirrec(bdir,ex,fn,fnc,arg);
+		switch(di->d_type){
+		case DT_REG: mode=MS_FILE; break;
+		case DT_DIR: mode=MS_DIR; break;
+		case DT_LNK: mode=MS_LNK; break;
+		default: mode=MS_NONE; break;
+		}
+		ret+=fnc(fn,mode,arg);
+		if(mode==MS_DIR) ret+=dirrec(bdir,ex,fn,fnc,arg);
 	}
 	closedir(dd);
 	return ret;
