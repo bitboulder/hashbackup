@@ -8,7 +8,8 @@
 
 struct dbf;
 struct dbt;
-struct dbh;
+
+#include "dbh.h"
 
 void dbload();
 void dbtsave(struct dbt *dt);
@@ -30,15 +31,7 @@ const char *dbfgetfn(struct dbf *df);
 struct st *dbfgetst(struct dbf *df);
 char *dbfgetmk(struct dbf *df);
 struct dbh *dbfgeth(struct dbf *df);
+void dbfseth(struct dbf *df,struct dbh *dh);
 char *dbfgetlnk(struct dbf *df);
-
-void dbhload();
-struct dbh *dbhnew(unsigned char *sha,size_t si);
-struct dbh *dbhget(unsigned char *sha);
-void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df);
-unsigned char *dbhgetsha(struct dbh *dh);
-size_t dbhgetsi(struct dbh *dh);
-void dbhsetsi(struct dbh *dh,size_t si);
-char dbhexdt(struct dbh *dh,struct dbt *dt);
 
 #endif

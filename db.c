@@ -33,27 +33,12 @@ struct dbt {
 	struct dbf *fhsh[HNCH];
 };
 
-struct dbhf {
-	struct dbhf *nxt;
-	struct dbt *dt;
-	struct dbf *df;
-};
-
-struct dbh {
-	struct dbh *nxt;
-	unsigned char sha[SHALEN];
-	struct dbhf *hf;
-	size_t si;
-};
-
 struct db {
 	char bdir[FNLEN];
 	struct ex *ex;
 	struct dbt *dt;
-	struct dbh *dh[HNCH];
 } db = {
 	.dt=NULL,
-	.dh={NULL},
 	.ex=NULL,
 };
 
@@ -139,7 +124,7 @@ void dbtsave(struct dbt *dt){
 		gzprintf(fd,"%s\n",df->fn);
 		gzwrite(fd,&df->st,sizeof(struct st));
 		switch(df->st.mode){
-		case MS_FILE: gzwrite(fd,df->dh->sha,sizeof(unsigned char)*SHALEN); break;
+		case MS_FILE: gzwrite(fd,dbhgetsha(df->dh),sizeof(unsigned char)*SHALEN); break;
 		case MS_LNK: gzwrite(fd,df->lnk,sizeof(char)*FNLEN); break;
 		case MS_DIR: break;
 		case MS_NONE: break;
@@ -211,57 +196,6 @@ const char *dbfgetfn(struct dbf *df){ return df->fn; }
 struct st *dbfgetst(struct dbf *df){ return &df->st; }
 char *dbfgetmk(struct dbf *df){ return &df->mk; }
 struct dbh *dbfgeth(struct dbf *df){ return df->dh; }
+void dbfseth(struct dbf *df,struct dbh *dh){ df->dh=dh; }
 char *dbfgetlnk(struct dbf *df){ return df->lnk; }
 
-int dbhloadh(const char *fn,enum fmode mode,void *arg){
-	unsigned char sha[SHALEN];
-	if(mode!=MS_FILE) return 0;
-	fn2sha(fn,sha);
-	dbhnew(sha,filesize(fn));
-	return 1;
-}
-
-void dbhload(){
-	dirrec(".",NULL,DH,dbhloadh,NULL);
-}
-
-struct dbh *dbhnew(unsigned char *sha,size_t si){
-	unsigned int ch=(*(unsigned int*)sha)%HNCH;
-	struct dbh *dh=malloc(sizeof(struct dbh));
-	dh->nxt=db.dh[ch];
-	db.dh[ch]=dh;
-	memcpy(dh->sha,sha,SHALEN);
-	dh->hf=NULL;
-	dh->si=si;
-	return dh;
-}
-
-struct dbh *dbhget(unsigned char *sha){
-	unsigned int ch=(*(unsigned int*)sha)%HNCH;
-	struct dbh *dh=db.dh[ch];
-	while(dh && memcmp(dh->sha,sha,SHALEN)) dh=dh->nxt;
-	return dh;
-}
-
-void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df){
-	struct dbhf *hf=dh->hf;
-	df->dh=dh;
-	while(hf && hf->df!=df) hf=hf->nxt;
-	if(hf) return;
-	hf=malloc(sizeof(struct dbhf));
-	hf->nxt=dh->hf;
-	dh->hf=hf;
-	hf->dt=dt;
-	hf->df=df;
-}
-
-unsigned char *dbhgetsha(struct dbh *dh){ return dh?dh->sha:NULL; }
-size_t dbhgetsi(struct dbh *dh){ return dh->si; }
-void dbhsetsi(struct dbh *dh,size_t si){ dh->si=si; }
-
-char dbhexdt(struct dbh *dh,struct dbt *dt){
-	struct dbhf *hf;
-	if(!dh) return 1;
-	for(hf=dh->hf;hf;hf=hf->nxt) if(hf->dt!=dt) return 0;
-	return 1;
-}
