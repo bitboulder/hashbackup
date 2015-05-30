@@ -7,23 +7,52 @@
 #include "main.h"
 
 struct dri {
-	struct dri *nxt;
+	size_t ino;
 	char fn[FNLEN];
 	enum fmode mode;
+};
+
+struct dris {
+	size_t used;
+	size_t size;
+	struct dri **d;
 };
 
 struct dr {
 	const char *bdir;
 	struct ex *ex;
-	struct dri *d;
+	struct dris dcur,dnxt;
 };
 
-void driadd(struct dri **dri,struct dri *d){
-	d->nxt=*dri;
-	*dri=d;
+void drisinit(struct dris *ds){
+	ds->used=0;
+	ds->size=1023;
+	ds->d=malloc((ds->size+1)*sizeof(struct dri*));
 }
 
-void drdir(struct dr *dr,const char *dir){
+void drisresize(struct dris *ds){
+	ds->size+=ds->size+1;
+	ds->d=realloc(ds->d,(ds->size+1)*sizeof(struct dri*));
+}
+
+void drisheapify(struct dris *ds,struct dri *d,size_t pn){
+	/* TODO */
+	ds->d[pn]=d;
+}
+
+void drisput(struct dris *ds,struct dri *d){
+	if(ds->used==ds->size) drisresize(ds);
+	drisheapify(ds,d,++ds->used);
+}
+
+struct dri *drispop(struct dris *ds){
+	struct dri *d=ds->d[1];
+	if(!ds->used) return NULL;
+	drisheapify(ds,ds->d[ds->used--],1);
+	return d;
+}
+
+void drdir(struct dr *dr,const char *dir,size_t ino){
 	char dn[FNLEN];
 	DIR *dd;
 	struct dirent *di;
@@ -42,7 +71,8 @@ void drdir(struct dr *dr,const char *dir){
 		case DT_LNK: d->mode=MS_LNK; break;
 		default: d->mode=MS_NONE; break;
 		}
-		driadd(&dr->d,d);
+		d->ino=di->d_ino;
+		drisput(d->ino<ino ? &dr->dnxt : &dr->dcur,d);
 	}
 	closedir(dd);
 }
@@ -53,13 +83,20 @@ int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*
 		.ex=ex,
 	};
 	int ret=0;
-	drdir(&dr,dir);
-	while(dr.d){
-		struct dri *d=dr.d;
-		dr.d=d->nxt;
-		if(d->mode==MS_DIR) drdir(&dr,d->fn);
-		ret+=fnc(d->fn,d->mode,arg);
-		free(d);
-	}
+	drisinit(&dr.dcur);
+	drisinit(&dr.dnxt);
+	drdir(&dr,dir,0);
+	do{
+		struct dri *d;
+		struct dris ds;
+		while((d=drispop(&dr.dcur))){
+			if(d->mode==MS_DIR) drdir(&dr,d->fn,d->ino);
+			ret+=fnc(d->fn,d->mode,arg);
+			free(d);
+		}
+		ds=dr.dcur;
+		dr.dcur=dr.dnxt;
+		dr.dnxt=ds;
+	}while(dr.dcur.used);
 	return ret;
 }
