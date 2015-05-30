@@ -6,30 +6,60 @@
 #include "dirrec.h"
 #include "main.h"
 
-int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,enum fmode,void *),void *arg){
+struct dri {
+	struct dri *nxt;
+	char fn[FNLEN];
+	enum fmode mode;
+};
+
+struct dr {
+	const char *bdir;
+	struct ex *ex;
+	struct dri *d;
+};
+
+void driadd(struct dri **dri,struct dri *d){
+	d->nxt=*dri;
+	*dri=d;
+}
+
+void drdir(struct dr *dr,const char *dir){
 	char dn[FNLEN];
 	DIR *dd;
 	struct dirent *di;
-	int ret=0;
-	snprintf(dn,FNLEN,"%s/%s",bdir,dir);
-	if(!(dd=opendir(dn))){ error(0,"opendir failed for '%s'",dn); return 0; }
+	snprintf(dn,FNLEN,"%s/%s",dr->bdir,dir);
+	if(!(dd=opendir(dn))){ error(0,"opendir failed for '%s'",dn); return; }
 	/* TODO: sort by inode */
 	while((di=readdir(dd))){
-		char fn[FNLEN];
-		enum fmode mode;
+		struct dri *d;
 		if(di->d_name[0]=='.' && (!di->d_name[1] || (di->d_name[1]=='.' && !di->d_name[2]))) continue;
-		snprintf(fn,FNLEN,"%s/%s",dir,di->d_name);
-		if(exfn(ex,fn)) continue;
+		d=malloc(sizeof(struct dri));
+		snprintf(d->fn,FNLEN,"%s/%s",dir,di->d_name);
+		if(exfn(dr->ex,d->fn)){ free(d); continue; }
 		switch(di->d_type){
-		case DT_REG: mode=MS_FILE; break;
-		case DT_DIR: mode=MS_DIR; break;
-		case DT_LNK: mode=MS_LNK; break;
-		default: mode=MS_NONE; break;
+		case DT_REG: d->mode=MS_FILE; break;
+		case DT_DIR: d->mode=MS_DIR; break;
+		case DT_LNK: d->mode=MS_LNK; break;
+		default: d->mode=MS_NONE; break;
 		}
-		ret+=fnc(fn,mode,arg);
-		if(mode==MS_DIR) ret+=dirrec(bdir,ex,fn,fnc,arg);
+		driadd(&dr->d,d);
 	}
 	closedir(dd);
-	return ret;
 }
 
+int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,enum fmode,void *),void *arg){
+	struct dr dr={
+		.bdir=bdir,
+		.ex=ex,
+	};
+	int ret=0;
+	drdir(&dr,dir);
+	while(dr.d){
+		struct dri *d=dr.d;
+		dr.d=d->nxt;
+		if(d->mode==MS_DIR) drdir(&dr,d->fn);
+		ret+=fnc(d->fn,d->mode,arg);
+		free(d);
+	}
+	return ret;
+}
