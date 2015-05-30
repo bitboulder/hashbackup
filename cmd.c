@@ -94,7 +94,7 @@ char difft(struct dbt *dt){
 	int chg;
 	printf("[diff %s]\n",timefmt(dbtgett(dt)));
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
-	chg=dirrec(dbbdir(),1,"",difile,dt);
+	chg=dirrec(dbbdir(),dbgetex(),"",difile,dt);
 	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ printf("del: %s\n",dbfgetfn(df)); chg++; }
 	return chg!=0;
 }
@@ -135,7 +135,7 @@ void commit(){
 	if(dt[0] && !difft(dt[0])) error(1,"no changes -> no commit");
 	dt[1]=dbtnew(0);
 	printf("[commit %s]\n",timefmt(dbtgett(dt[1])));
-	dirrec(dbbdir(),1,"",cifile,dt);
+	dirrec(dbbdir(),dbgetex(),"",cifile,dt);
 	dbtsave(dt[1]);
 	tlistt(dt[1]);
 }

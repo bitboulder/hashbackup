@@ -2,6 +2,8 @@
 #define _HELP_H
 
 #include <stdint.h>
+#include <time.h>
+#include "ex.h"
 
 struct st {
 	enum { MS_NONE, MS_FILE, MS_DIR, MS_LNK } mode;
@@ -10,7 +12,8 @@ struct st {
 	time_t mtime,ctime;
 };
 
-int dirrec(const char *bdir,char ex,const char *dir,int (*fnc)(const char*,void *),void *arg);
+int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,void *),void *arg);
+char *fnrmnewline(char *fn);
 struct dbt *timeparse(const char *stime);
 const char *timefmt(time_t t);
 const char *sizefmt(size_t si);
@@ -22,6 +25,7 @@ void mkd(const char *fn);
 
 void lnkget(const char *fn,char *lnk);
 void lnkset(const char *lnk,const char *fn);
+
 char shaget(const char *fn,unsigned char *sha);
 void shafn(const char *fn,unsigned char *sha);
 void fn2sha(const char *fn,unsigned char *sha);

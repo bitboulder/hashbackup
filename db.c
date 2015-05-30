@@ -11,6 +11,7 @@
 #include "main.h"
 #include "help.h"
 #include "dat.h"
+#include "ex.h"
 
 #define HNCH	8192
 
@@ -45,14 +46,9 @@ struct dbh {
 	size_t si;
 };
 
-struct dbex {
-	char pat[FNLEN];
-	struct dbex *nxt;
-};
-
 struct db {
 	char bdir[FNLEN];
-	struct dbex *ex;
+	struct ex *ex;
 	struct dbt *dt;
 	struct dbh *dh[HNCH];
 } db = {
@@ -67,13 +63,6 @@ int fkey(const char *fn){
 	return (*(unsigned int*)sha)%HNCH;
 }
 
-char *fnrmnewline(char *fn){
-	int i;
-	for(i=0;i<FNLEN-1 && fn[i] && fn[i]!='\n';) i++;
-	fn[i]='\0';
-	return fn;
-}
-
 void dbloadbdir(){
 	FILE *fd;
 	if(!(fd=fopen("basedir","r"))) return;
@@ -83,30 +72,13 @@ void dbloadbdir(){
 	fnrmnewline(db.bdir);
 }
 
-void dbloadex(){
-	FILE *fd;
-	char ex[2048],*p,*pat;
-	if(!(fd=fopen("exclude","r"))) return;
-	if(!fgets(ex,sizeof(ex),fd)) return;
-	fclose(fd);
-	ex[sizeof(ex)-1]='\0';
-	fnrmnewline(ex);
-	p=ex;
-	while((pat=strsep(&p,"|"))){
-		struct dbex *ex=malloc(sizeof(struct dbex));
-		snprintf(ex->pat,FNLEN,"%s",pat);
-		ex->nxt=db.ex;
-		db.ex=ex;
-	}
-}
-
 void dbload(){
 	DIR *dd;
 	struct dirent *di;
 	gzFile gd;
 	printf("[dbload]\n");
 	dbloadbdir();
-	dbloadex();
+	db.ex=exload("exclude");
 	if(!(dd=opendir(DD))) return;
 	while((di=readdir(dd))){
 		char fn[FNLEN];
@@ -173,20 +145,7 @@ void dbtsave(struct dbt *dt){
 }
 
 const char *dbbdir(){ return db.bdir; }
-
-char dbex(const char *fn){
-	struct dbex *ex;
-	char *p;
-	for(ex=db.ex;ex;ex=ex->nxt) if((p=strstr(fn,ex->pat))){
-		size_t l=strlen(ex->pat);
-		if(p>fn){
-			if(ex->pat[0]=='/') continue;
-			if(p[-1]!='/') continue;
-		}
-		if(p[l]=='/' || p[l]=='\0') return 1;
-	}
-	return 0;
-}
+struct ex *dbgetex(){ return db.ex; }
 
 struct dbt *dbtnew(time_t t){
 	struct dbt *dt=calloc(1,sizeof(struct dbt));

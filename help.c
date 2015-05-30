@@ -12,7 +12,7 @@
 #include "main.h"
 #include "db.h"
 
-int dirrec(const char *bdir,char ex,const char *dir,int (*fnc)(const char*,void *),void *arg){
+int dirrec(const char *bdir,struct ex *ex,const char *dir,int (*fnc)(const char*,void *),void *arg){
 	char dn[FNLEN];
 	DIR *dd;
 	struct dirent *di;
@@ -23,12 +23,19 @@ int dirrec(const char *bdir,char ex,const char *dir,int (*fnc)(const char*,void 
 		char fn[FNLEN];
 		if(di->d_name[0]=='.' && (!di->d_name[1] || (di->d_name[1]=='.' && !di->d_name[2]))) continue;
 		snprintf(fn,FNLEN,"%s/%s",dir,di->d_name);
-		if(ex && dbex(fn)) continue;
+		if(exfn(ex,fn)) continue;
 		ret+=fnc(fn,arg);
 		if((di->d_type&DT_DIR) && !(di->d_type&DT_LNK)) ret+=dirrec(bdir,ex,fn,fnc,arg);
 	}
 	closedir(dd);
 	return ret;
+}
+
+char *fnrmnewline(char *fn){
+	int i;
+	for(i=0;i<FNLEN-1 && fn[i] && fn[i]!='\n';) i++;
+	fn[i]='\0';
+	return fn;
 }
 
 struct dbt *timeparse(const char *stime){
