@@ -65,7 +65,6 @@ void dbhadd(struct dbh *dh,struct dbt *dt,struct dbf *df){
 
 unsigned char *dbhgetsha(struct dbh *dh){ return dh?dh->sha:NULL; }
 size_t dbhgetsi(struct dbh *dh){ return dh->si; }
-void dbhsetsi(struct dbh *dh,size_t si){ dh->si=si; }
 
 char dbhexdt(struct dbh *dh,struct dbt *dt){
 	struct dbhf *hf;
