@@ -10,14 +10,6 @@
 
 #define BUFLEN	8192
 
-void sha2fn(const unsigned char *sha,char *fn){
-	snprintf(fn,FNLEN,DH "/%02x/%02x/%016lx%016lx%02x",
-		sha[0],sha[1],
-		*(uint64_t*)(sha+2),
-		*(uint64_t*)(sha+10),
-		*(uint16_t*)(sha+18));
-}
-
 size_t datadd(const unsigned char *sha,const char *fn){
 	char fni[FNLEN],fno[FNLEN];
 	FILE *fdi;

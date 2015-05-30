@@ -133,3 +133,28 @@ void shafn(const char *fn,unsigned char *sha){
 	size_t l=strlen(fn);
 	SHA((const unsigned char*)fn,l,sha);
 }
+
+void sha2fn(const unsigned char *sha,char *fn){
+	int f,s;
+	f=snprintf(fn,FNLEN,"%s",DH);
+	fn[f++]='/';
+	for(s=0;s<SHALEN*2;s++){
+		unsigned char c= s%2 ? *sha&0xf : *sha>>4;
+		fn[f++] = c>=10 ? c-10+'a' : c+'0';
+		if(s%2) sha++;
+		if(s==1) fn[f++]='/';
+		if(s==3) fn[f++]='/';
+	}
+	fn[f++]='\0';
+}
+
+void fn2sha(const char *fn,unsigned char *sha){
+	int f=0,s;
+	if(!strncmp(fn,"dat/",4)) f=4;
+	for(s=0;fn[f] && s<SHALEN*2;f++) if((fn[f]>='0' && fn[f]<='9')||(fn[f]>='a' && fn[f]<='f')){
+		unsigned char c = fn[f]>='a' ? fn[f]-'a'+10 : fn[f]-'0';
+		if(s%2){ *sha+=c; sha++; }else *sha=c<<4;
+		s++;
+	}
+}
+

@@ -24,5 +24,7 @@ void lnkget(const char *fn,char *lnk);
 void lnkset(const char *lnk,const char *fn);
 char shaget(const char *fn,unsigned char *sha);
 void shafn(const char *fn,unsigned char *sha);
+void fn2sha(const char *fn,unsigned char *sha);
+void sha2fn(const unsigned char *sha,char *fn);
 
 #endif
