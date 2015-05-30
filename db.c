@@ -10,6 +10,7 @@
 #include "db.h"
 #include "main.h"
 #include "help.h"
+#include "sha.h"
 #include "dat.h"
 #include "ex.h"
 

@@ -5,6 +5,7 @@
 #include "dbh.h"
 #include "main.h"
 #include "help.h"
+#include "sha.h"
 
 #define HNCH	8192
 

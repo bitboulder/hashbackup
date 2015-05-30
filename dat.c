@@ -8,6 +8,7 @@
 #include "main.h"
 #include "db.h"
 #include "help.h"
+#include "sha.h"
 
 #define BUFLEN	8192
 
