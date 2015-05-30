@@ -75,7 +75,6 @@ void drdir(struct dr *dr,const char *dir,size_t ino){
 	struct dirent *di;
 	snprintf(dn,FNLEN,"%s/%s",dr->bdir,dir);
 	if(!(dd=opendir(dn))){ error(0,"opendir failed for '%s'",dn); return; }
-	/* TODO: sort by inode */
 	while((di=readdir(dd))){
 		struct dri *d;
 		if(di->d_name[0]=='.' && (!di->d_name[1] || (di->d_name[1]=='.' && !di->d_name[2]))) continue;
