@@ -13,8 +13,8 @@ struct dbh *dbhgetnxt(struct dbh *dh);
 
 unsigned char *dbhgetsha(struct dbh *dh);
 size_t dbhgetsi(struct dbh *dh);
-char dbhgetmk(struct dbh *dh);
-void dbhsetmk(struct dbh *dh,char mk);
+char *dbhgetmk(struct dbh *dh);
+void dbhresetmk();
 
 char dbhexdt(struct dbh *dh,struct dbt *dt);
 

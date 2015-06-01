@@ -40,9 +40,10 @@ void tlistt(struct dbt *dt){
 		}
 		nf++;
 	}
-	printf("%s nf %4i si %5s ",timefmt(dbtgett(dt)),nf,sizefmt(si));
-	printf("gz %5s ",sizefmt(gz));
-	printf("ex %5s\n",sizefmt(ex));
+	printf("%s nf %4i si %5s",timefmt(dbtgett(dt)),nf,sizefmt(si));
+	printf(" gz %5s",sizefmt(gz));
+	printf(" ex %5s",sizefmt(ex));
+	printf("\n");
 }
 
 void tlist(){
@@ -204,12 +205,11 @@ void dbcheck(){
 	struct dbt *dt;
 	struct dbf *df;
 	printf("[dbcheck]\n");
-	for(dh=NULL;(dh=dbhgetnxt(dh));) dbhsetmk(dh,0);
-	for(dt=NULL;(dt=dbtgetnxt(dt));) for(df=NULL;(df=dbfgetnxt(dt,df));) if((dh=dbfgeth(df))) dbhsetmk(dh,1);
+	for(dt=NULL;(dt=dbtgetnxt(dt));) for(df=NULL;(df=dbfgetnxt(dt,df));) if((dh=dbfgeth(df))) *dbhgetmk(dh)=1;
 	for(dh=NULL;(dh=dbhgetnxt(dh));){
 		char fn[FNLEN];
 		sha2fn(dbhgetsha(dh),fn);
-		if(dbhgetmk(dh)){
+		if(*dbhgetmk(dh)){
 			unsigned char sha[SHALEN];
 			/* TODO: sort by file pos */
 			shagetdb(fn,sha);

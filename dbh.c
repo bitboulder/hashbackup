@@ -78,8 +78,11 @@ struct dbh *dbhgetnxt(struct dbh *dh){
 
 unsigned char *dbhgetsha(struct dbh *dh){ return dh?dh->sha:NULL; }
 size_t dbhgetsi(struct dbh *dh){ return dh->si; }
-char dbhgetmk(struct dbh *dh){ return dh->mk; }
-void dbhsetmk(struct dbh *dh,char mk){ dh->mk=mk; }
+char *dbhgetmk(struct dbh *dh){ return &dh->mk; }
+void dbhresetmk(){
+	struct dbh *dh=NULL;
+	while((dh=dbhgetnxt(dh))) *dbhgetmk(dh)=0;
+}
 
 char dbhexdt(struct dbh *dh,struct dbt *dt){
 	struct dbhf *hf;
