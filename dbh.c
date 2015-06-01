@@ -84,9 +84,16 @@ void dbhresetmk(){
 	while((dh=dbhgetnxt(dh))) *dbhgetmk(dh)=0;
 }
 
-char dbhexdt(struct dbh *dh,struct dbt *dt){
+enum dbhex dbhexdt(struct dbh *dh,struct dbt *dt){
 	struct dbhf *hf;
-	if(!dh) return 1;
-	for(hf=dh->hf;hf;hf=hf->nxt) if(hf->dt!=dt) return 0;
-	return 1;
+	enum dbhex r=0;
+	if(!dh) return 0;
+	for(hf=dh->hf;hf;hf=hf->nxt){
+		if(hf->dt==dt) r|=DE_IN;
+		if(hf->dt!=dt){
+			r|=DE_EX;
+			if(dbtgett(hf->dt)>dbtgett(dt)) r|=DE_OLD;
+		}
+	}
+	return r;
 }

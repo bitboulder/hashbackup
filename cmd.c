@@ -29,20 +29,20 @@ void init(const char *basedir,const char *exclude){
 void tlistt(struct dbt *dt){
 	int nf=0;
 	struct dbf *df=NULL;
-	size_t si=0,ex=0,gz=0;
-	while((df=dbfgetnxt(dt,df))){
-		struct st *st=dbfgetst(df);
-		struct dbh *dh=dbfgeth(df);
-		si+=st->size;
-		if(dh){
-			gz+=dbhgetsi(dh);
-			if(dbhexdt(dh,dt)) ex+=dbhgetsi(dh);
-		}
+	struct dbh *dh=NULL;
+	size_t si=0,ex=0,gz=0,sum=0;
+	while((df=dbfgetnxt(dt,df))) si+=dbfgetst(df)->size;
+	while((dh=dbhgetnxt(dh))){
+		enum dbhex r=dbhexdt(dh,dt);
+		if(r&DE_IN) gz+=dbhgetsi(dh);
+		if(!(r&DE_EX)) ex+=dbhgetsi(dh);
+		if(!(r&DE_OLD)) sum+=dbhgetsi(dh);
 		nf++;
 	}
 	printf("%s nf %4i si %5s",timefmt(dbtgett(dt)),nf,sizefmt(si));
 	printf(" gz %5s",sizefmt(gz));
 	printf(" ex %5s",sizefmt(ex));
+	printf(" sum %5s",sizefmt(sum));
 	printf("\n");
 }
 
