@@ -83,7 +83,7 @@ int difile(const char *fn,enum ftyp typ,void *vdt){
 	if(!(df=dbfget(dt,fn))){ printf("new: %s\n",fn); return 1; }
 	statget(1,fn,&st);
 	*dbfgetmk(df)=1;
-	if(memcmp(&st,dbfgetst(df),sizeof(struct st))){ printf("mod: %s\n",fn); return 1; }
+	if(statcmp(&st,dbfgetst(df))){ printf("mod: %s\n",fn); return 1; }
 	return 0;
 }
 
@@ -116,7 +116,7 @@ int cifile(const char *fn,enum ftyp typ,void *vdt){
 	statget(1,fn,st=dbfgetst(df));
 	switch(st->typ){
 	case FT_FILE:
-		if(dfn && !memcmp(st,dbfgetst(dfn),sizeof(struct st))){
+		if(dfn && !statcmp(st,dbfgetst(dfn))){
 			struct dbh *dh=dbfgeth(dfn);
 			if(dh) dbhadd(dh,dt,df);
 		}else{
@@ -164,6 +164,7 @@ void restore(const char *fn,const char *stime,const char *dstdir){
 	struct dbf *df=NULL;
 	if(!dstdir) dstdir="restore";
 	printf("[restore %s (%s) -> %s]\n",timefmt(dbtgett(dt)),fn&&fn[0]?fn:"all",dstdir);
+	/* TODO: dirs statset after files */
 	if(!fn || !fn[0]) while((df=dbfgetnxt(dt,df))) restoref(df,dstdir);
 	else{
 		if(!(df=dbfget(dt,fn))) error(1,"file not found: '%s'\n",fn);

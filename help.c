@@ -75,6 +75,12 @@ void statset(struct st *st,const char *fn){
 	/* TODO check errors */
 }
 
+char statcmp(struct st *a,struct st *b){
+	struct st x=*a;
+	x.atime=b->atime;
+	return 0!=memcmp(&x,b,sizeof(struct st));
+}
+
 size_t filesize(const char *fn){
 	struct stat st;
 	if(!lstat(fn,&st)) return st.st_size;

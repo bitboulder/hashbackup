@@ -19,6 +19,7 @@ const char *sizefmt(size_t si);
 
 char statget(char bdir,const char *fn,struct st *st);
 void statset(struct st *st,const char *fn);
+char statcmp(struct st *a,struct st *b);
 size_t filesize(const char *fn);
 void mkd(const char *fn);
 
