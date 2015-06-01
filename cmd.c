@@ -151,7 +151,7 @@ void restoref(struct dbf *df,const char *dstdir){
 	char fn[FNLEN];
 	struct dbf *dfc;
 	st=dbfgetst(df);
-	snprintf(fn,FNLEN,"%s/%s%s",dstdir,dbfgetfn(df),st->typ==FT_DIR?"/":"");
+	snprintf(fn,FNLEN,"%s%s%s",dstdir,dbfgetfn(df),st->typ==FT_DIR?"/":"");
 	switch(st->typ){
 	case FT_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break; /* TODO: sort by file pos */
 	case FT_DIR: mkd(fn); break;

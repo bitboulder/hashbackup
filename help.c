@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 #include "help.h"
 #include "main.h"
@@ -71,7 +72,7 @@ void statset(struct st *st,const char *fn){
 		{.tv_sec=st->atime,.tv_usec=0},
 		{.tv_sec=st->mtime,.tv_usec=0},
 	};
-	if(!lchown(fn,st->uid,st->gid)) error(0,"lchown failed for '%s'",fn);
+	if(lchown(fn,st->uid,st->gid)) error(0,"lchown failed for '%s': %s",fn,strerror(errno));
 	if(st->typ!=FT_LNK && chmod(fn,st->mode)) error(0,"chmod failed for '%s'",fn);
 	if(lutimes(fn,utim)) error(0,"lutimes failed for '%s'",fn);
 }
