@@ -1,11 +1,11 @@
 #define _BSD_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-#include <utime.h>
 
 #include "help.h"
 #include "main.h"
@@ -67,12 +67,13 @@ char statget(char bdir,const char *fn,struct st *st){
 }
 
 void statset(struct st *st,const char *fn){
-	struct utimbuf utim={.actime=st->atime, .modtime=st->mtime};
-	lchown(fn,st->uid,st->gid);
-	chmod(fn,st->mode); /* TODO: lchmod ?? */
-	utime(fn,&utim); /* TODO: lutime ?? */
-	/* TODO ctime */
-	/* TODO check errors */
+	struct timeval utim[2]={
+		{.tv_sec=st->atime,.tv_usec=0},
+		{.tv_sec=st->mtime,.tv_usec=0},
+	};
+	if(!lchown(fn,st->uid,st->gid)) error(0,"lchown failed for '%s'",fn);
+	if(st->typ!=FT_LNK && chmod(fn,st->mode)) error(0,"chmod failed for '%s'",fn);
+	if(lutimes(fn,utim)) error(0,"lutimes failed for '%s'",fn);
 }
 
 char statcmp(struct st *a,struct st *b){

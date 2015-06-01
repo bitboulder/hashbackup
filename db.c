@@ -26,6 +26,8 @@ struct dbf {
 	struct st st;
 	struct dbh *dh;
 	char mk;
+	struct dbf *c;
+	struct dbf *cnxt;
 };
 
 struct dbt {
@@ -175,6 +177,7 @@ struct dbf *dbfnew(struct dbt *dt,const char *fn){
 	df->nxt=dt->fhsh[fk];
 	dt->fhsh[fk]=df;
 	memcpy(df->fn,fn,FNLEN);
+	/* TODO set df->c + df->cnxt */
 	return df;
 }
 
