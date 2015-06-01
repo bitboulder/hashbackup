@@ -34,6 +34,7 @@ struct dbt {
 	struct dbt *nxt;
 	time_t t;
 	struct dbf *fhsh[HNCH];
+	struct dbf *c;
 };
 
 struct db {
@@ -164,6 +165,24 @@ struct dbt *dbtgetnewest(){
 }
 
 time_t dbtgett(struct dbt *dt){ return dt->t; }
+struct dbf *dbtgetc(struct dbt *dt){ return dt->c; }
+
+void dbtsetc(struct dbt *dt){
+	struct dbf *df=NULL;
+	char *p;
+	while((df=dbfgetnxt(dt,df))) if((p=strrchr(df->fn,'/')) && p>df->fn){
+		struct dbf *dfp;
+		*p='\0';
+		if((dfp=dbfget(dt,df->fn))){
+			df->cnxt=dfp->c;
+			dfp->c=df;
+		}else error(0,"parent not found: '%s'",df->fn);
+		*p='/';
+	}else{
+		df->cnxt=dt->c;
+		dt->c=df;
+	}
+}
 
 void dbtdel(struct dbt *dt){
 	char fn[FNLEN];
@@ -177,7 +196,6 @@ struct dbf *dbfnew(struct dbt *dt,const char *fn){
 	df->nxt=dt->fhsh[fk];
 	dt->fhsh[fk]=df;
 	memcpy(df->fn,fn,FNLEN);
-	/* TODO set df->c + df->cnxt */
 	return df;
 }
 
@@ -202,4 +220,6 @@ char *dbfgetmk(struct dbf *df){ return &df->mk; }
 struct dbh *dbfgeth(struct dbf *df){ return df->dh; }
 void dbfseth(struct dbf *df,struct dbh *dh){ df->dh=dh; }
 char *dbfgetlnk(struct dbf *df){ return df->lnk; }
+struct dbf *dbfgetc(struct dbf *df){ return df->c; }
+struct dbf *dbfgetcnxt(struct dbf *df){ return df->cnxt; }
 

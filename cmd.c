@@ -147,8 +147,10 @@ void commit(){
 }
 
 void restoref(struct dbf *df,const char *dstdir){
-	struct st *st=dbfgetst(df);
+	struct st *st;
 	char fn[FNLEN];
+	struct dbf *dfc;
+	st=dbfgetst(df);
 	snprintf(fn,FNLEN,"%s/%s%s",dstdir,dbfgetfn(df),st->typ==FT_DIR?"/":"");
 	switch(st->typ){
 	case FT_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break; /* TODO: sort by file pos */
@@ -156,20 +158,21 @@ void restoref(struct dbf *df,const char *dstdir){
 	case FT_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
 	case FT_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
 	}
+	for(dfc=dbfgetc(df);dfc;dfc=dbfgetcnxt(dfc)) restoref(dfc,dstdir);
 	statset(st,fn);
 }
 
 void restore(const char *fn,const char *stime,const char *dstdir){
 	struct dbt *dt=timenewest(stime);
-	struct dbf *df=NULL;
+	struct dbf *df;
 	if(!dstdir) dstdir="restore";
-	printf("[restore %s (%s) -> %s]\n",timefmt(dbtgett(dt)),fn&&fn[0]?fn:"all",dstdir);
-	/* TODO: dirs statset after files */
-	if(!fn || !fn[0]) while((df=dbfgetnxt(dt,df))) restoref(df,dstdir);
+	printf("[restore %s (%s -> %s)]\n",timefmt(dbtgett(dt)),fn&&fn[0]?fn:"/",dstdir);
+	dbtsetc(dt);
+	if(!fn || !fn[0]) for(df=dbtgetc(dt);df;df=dbfgetcnxt(df)) restoref(df,dstdir);
 	else{
 		if(!(df=dbfget(dt,fn))) error(1,"file not found: '%s'\n",fn);
-		/* TODO: restore recursive from dir */
 		restoref(df,dstdir);
+
 	}
 }
 

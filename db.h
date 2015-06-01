@@ -22,6 +22,8 @@ struct dbt *dbtget(time_t t);
 struct dbt *dbtgetnxt(struct dbt *dt);
 struct dbt *dbtgetnewest();
 time_t dbtgett(struct dbt *dt);
+struct dbf *dbtgetc(struct dbt *dt);
+void dbtsetc(struct dbt *dt);
 void dbtdel(struct dbt *dt);
 
 struct dbf *dbfnew(struct dbt *dt,const char *fn);
@@ -33,5 +35,7 @@ char *dbfgetmk(struct dbf *df);
 struct dbh *dbfgeth(struct dbf *df);
 void dbfseth(struct dbf *df,struct dbh *dh);
 char *dbfgetlnk(struct dbf *df);
+struct dbf *dbfgetc(struct dbf *df);
+struct dbf *dbfgetcnxt(struct dbf *df);
 
 #endif
