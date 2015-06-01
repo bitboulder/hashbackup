@@ -76,6 +76,13 @@ void flist(const char *stime){
 	}
 }
 
+struct dbt *timenewest(const char *stime){
+	struct dbt *dt;
+	if(!stime || !stime[0]){ if(!(dt=dbtgetnewest())) error(1,"no time found in db"); }
+	else if(!(dt=timeparse(stime))) error(1,"unkown time: '%s'",stime);
+	return dt;
+}
+
 int difile(const char *fn,enum ftyp typ,void *vdt){
 	struct dbt *dt=(struct dbt*)vdt;
 	struct dbf *df;
@@ -87,25 +94,30 @@ int difile(const char *fn,enum ftyp typ,void *vdt){
 	return 0;
 }
 
-struct dbt *timenewest(const char *stime){
-	struct dbt *dt;
-	if(!stime || !stime[0]){ if(!(dt=dbtgetnewest())) error(1,"no time found in db"); }
-	else if(!(dt=timeparse(stime))) error(1,"unkown time: '%s'",stime);
-	return dt;
+int difilesha(const char *fn,enum ftyp typ,void *vdt){
+	struct dbt *dt=(struct dbt*)vdt;
+	struct dbf *df;
+	unsigned char sha[SHALEN];
+	struct dbh *dh;
+	if(difile(fn,typ,vdt)) return 1;
+	if(!(df=dbfget(dt,fn))){ printf("new: %s\n",fn); return 1; }
+	if(!(dh=dbfgeth(df))) return 0;
+	shaget(fn,sha);
+	if(memcmp(sha,dbhgetsha(dh),SHALEN)){ printf("mod: %s\n",fn); return 1; }
+	return 0;
 }
 
-char difft(struct dbt *dt){
+char difft(struct dbt *dt,char sha){
 	struct dbf *df;
 	int chg;
 	printf("[diff %s]\n",timefmt(dbtgett(dt)));
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
-	chg=dirrec(dbbdir(),dbgetex(),"",difile,dt);
+	chg=dirrec(dbbdir(),dbgetex(),"",sha?difilesha:difile,dt);
 	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ printf("del: %s\n",dbfgetfn(df)); chg++; }
 	return chg!=0;
 }
 
-/* TODO: diffsha */
-void diff(const char *stime){ difft(timenewest(stime)); }
+void diff(const char *stime,char sha){ difft(timenewest(stime),sha); }
 
 int cifile(const char *fn,enum ftyp typ,void *vdt){
 	struct dbt *dtn=((struct dbt**)vdt)[0];
@@ -138,7 +150,7 @@ int cifile(const char *fn,enum ftyp typ,void *vdt){
 void commit(){
 	struct dbt *dt[2];
 	dt[0]=dbtgetnewest();
-	if(dt[0] && !difft(dt[0])) error(1,"no changes -> no commit");
+	if(dt[0] && !difft(dt[0],0)) error(1,"no changes -> no commit");
 	dt[1]=dbtnew(0);
 	printf("[commit %s]\n",timefmt(dbtgett(dt[1])));
 	dirrec(dbbdir(),dbgetex(),"",cifile,dt);
