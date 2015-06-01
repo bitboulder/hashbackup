@@ -48,7 +48,6 @@ void tlistt(struct dbt *dt){
 void tlist(){
 	struct dbt *dt=NULL;
 	printf("[tlist]\n");
-	/* TODO: sort by time */
 	while((dt=dbtgetnxt(dt))) tlistt(dt);
 }
 
@@ -71,7 +70,6 @@ void flist(const char *stime){
 	if(stime) flistt(timeparse(stime));
 	else{
 		struct dbt *dt=NULL;
-		/* TODO: sort by time */
 		while((dt=dbtgetnxt(dt))) flistt(dt);
 	}
 }

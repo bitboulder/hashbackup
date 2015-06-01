@@ -142,10 +142,11 @@ const char *dbbdir(){ return db.bdir; }
 struct ex *dbgetex(){ return db.ex; }
 
 struct dbt *dbtnew(time_t t){
-	struct dbt *dt=calloc(1,sizeof(struct dbt));
+	struct dbt *dt=calloc(1,sizeof(struct dbt)), **di=&db.dt;
 	dt->t= t ? t : time(NULL);
-	dt->nxt=db.dt;
-	db.dt=dt;
+	while(di[0] && di[0]->t<t) di=&di[0]->nxt;
+	dt->nxt=di[0];
+	di[0]=dt;
 	return dt;
 }
 
@@ -158,9 +159,8 @@ struct dbt *dbtget(time_t t){
 struct dbt *dbtgetnxt(struct dbt *dt){ return dt ? dt->nxt : db.dt; }
 
 struct dbt *dbtgetnewest(){
-	struct dbt *dti,*dt;
-	dti=dt=dbtgetnxt(NULL);
-	while((dti=dbtgetnxt(dti))) if(dbtgett(dti)>dbtgett(dt)) dt=dti;
+	struct dbt *dt=db.dt;
+	while(dt && dt->nxt) dt=dt->nxt;
 	return dt;
 }
 
