@@ -1,0 +1,9 @@
+hashbackup (1.0.0) unstable; urgency=low
+
+  * first realease
+
+ -- Frank Duckhorn <git@bitboulder.net>  Tue, 02 Jun 2015 18:43:32 +0200
+
+Local variables:
+mode: debian-changelog
+End:

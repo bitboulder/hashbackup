@@ -1,0 +1,16 @@
+Source: hashbackup
+Section: admin
+Priority: optional
+Maintainer: Frank Duckhorn <git@bitboulder.net>
+Build-Depends: libssl-dev, zlib1g-dev
+Standards-Version: 1.0.0
+Vcs-Git: http://github.com/bitboulder/hashbackup.git
+Vcs-Browser: http://github.com/bitboulder/hashbackup
+
+Package: hashbackup
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Backups directories into a hashed database.
+ Duplicate files are not save twice, even over different backups.
+ Incremental and decremental backups are supported.
+

@@ -1,2 +1,4 @@
 /hashbackup
 *.db
+/debian/files
+/debian/hashbackup*
