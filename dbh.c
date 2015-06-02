@@ -78,6 +78,7 @@ struct dbh *dbhgetnxt(struct dbh *dh){
 
 unsigned char *dbhgetsha(struct dbh *dh){ return dh?dh->sha:NULL; }
 size_t dbhgetsi(struct dbh *dh){ return dh->si; }
+void dbhsetsi(struct dbh *dh,size_t si){ dh->si=si; }
 char *dbhgetmk(struct dbh *dh){ return &dh->mk; }
 void dbhresetmk(){
 	struct dbh *dh=NULL;

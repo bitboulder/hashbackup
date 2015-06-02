@@ -119,13 +119,19 @@ char difft(struct dbt *dt,char sha){
 
 void diff(const char *stime,char sha){ difft(timenewest(stime),sha); }
 
-void cifilecp(struct dbt *dt,struct dbf *df){
+char cifilesha(struct dbt *dt,struct dbf *df){
 	unsigned char sha[SHALEN];
 	struct dbh *dh;
-	/* TODO: sort by file pos */
+	char ret;
 	shaget(dbfgetfn(df),sha);
-	if(!(dh=dbhget(sha))) dh=dbhnew(sha,datadd(sha,dbfgetfn(df))); /* TODO: parallel read next file */
+	if(!(dh=dbhget(sha))){ ret=1; dh=dbhnew(sha,0); }
 	dbhadd(dh,dt,df);
+	return ret;
+}
+
+void cifilecp(struct dbf *df){
+	struct dbh *dh=dbfgeth(df);
+	dbhsetsi(dh,datadd(dbhgetsha(dh),dbfgetfn(df)));
 }
 
 int cifile(const char *fn,enum ftyp typ,void *vdt){
@@ -156,7 +162,7 @@ void commit(){
 	dt[1]=dbtnew(0);
 	printf("[commit %s]\n",timefmt(dbtgett(dt[1])));
 	printf("[copy %i files]\n",dirrec(dbbdir(),dbgetex(),"",cifile,dt));
-	fqrun(dt[1],cifilecp);
+	fqrun(dt[1],cifilesha,cifilecp);
 	dbtsave(dt[1]);
 	tlistt(dt[1]);
 }
