@@ -9,6 +9,7 @@
 #include "sha.h"
 #include "dirrec.h"
 #include "dat.h"
+#include "fq.h"
 
 void init(const char *basedir,const char *exclude){
 	FILE *fd;
@@ -118,6 +119,15 @@ char difft(struct dbt *dt,char sha){
 
 void diff(const char *stime,char sha){ difft(timenewest(stime),sha); }
 
+void cifilecp(struct dbt *dt,struct dbf *df){
+	unsigned char sha[SHALEN];
+	struct dbh *dh;
+	/* TODO: sort by file pos */
+	shaget(dbfgetfn(df),sha);
+	if(!(dh=dbhget(sha))) dh=dbhnew(sha,datadd(sha,dbfgetfn(df))); /* TODO: parallel read next file */
+	dbhadd(dh,dt,df);
+}
+
 int cifile(const char *fn,enum ftyp typ,void *vdt){
 	struct dbt *dtn=((struct dbt**)vdt)[0];
 	struct dbt *dt =((struct dbt**)vdt)[1];
@@ -130,20 +140,13 @@ int cifile(const char *fn,enum ftyp typ,void *vdt){
 		if(dfn && !statcmp(st,dbfgetst(dfn))){
 			struct dbh *dh=dbfgeth(dfn);
 			if(dh) dbhadd(dh,dt,df);
-		}else{
-			unsigned char sha[SHALEN];
-			struct dbh *dh;
-			/* TODO: sort by file pos */
-			shaget(fn,sha);
-			if(!(dh=dbhget(sha))) dh=dbhnew(sha,datadd(sha,fn));
-			dbhadd(dh,dt,df);
-		}
+		}else fqadd(df);
 	break;
 	case FT_DIR: break;
 	case FT_LNK: lnkget(fn,dbfgetlnk(df)); break;
 	case FT_NONE: error(0,"no backup for none regular file: '%s'",fn);
 	}
-	return 0;
+	return 1;
 }
 
 void commit(){
@@ -152,7 +155,8 @@ void commit(){
 	if(dt[0] && !difft(dt[0],0)) error(1,"no changes -> no commit");
 	dt[1]=dbtnew(0);
 	printf("[commit %s]\n",timefmt(dbtgett(dt[1])));
-	dirrec(dbbdir(),dbgetex(),"",cifile,dt);
+	printf("[copy %i files]\n",dirrec(dbbdir(),dbgetex(),"",cifile,dt));
+	fqrun(dt[1],cifilecp);
 	dbtsave(dt[1]);
 	tlistt(dt[1]);
 }
