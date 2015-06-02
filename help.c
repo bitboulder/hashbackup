@@ -1,4 +1,5 @@
 #define _BSD_SOURCE
+#define _XOPEN_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -6,6 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 #include <errno.h>
 
 #include "help.h"
@@ -20,9 +22,22 @@ char *fnrmnewline(char *fn){
 }
 
 struct dbt *timeparse(const char *stime){
-	time_t t=atoi(stime); /* TODO: real parse */
+	time_t t=atoi(stime);
 	struct dbt *dt=dbtget(t);
-	if(!dt) error(1,"time not found: '%s' -> %li\n",stime,t);
+	if(!dt){
+		struct tm tm;
+		struct dbt *dti=dt=dbtgetnxt(NULL);
+		memset(&tm,0,sizeof(struct tm));
+		if(!dt) error(1,"not time found: '%s' -> %li\n",stime,t);
+		if(
+		   !strptime(stime,"%y-%m-%d %H:%M",&tm) &&
+		   !strptime(stime,"%y-%m-%d",&tm) &&
+		   !strptime(stime,"%y-%m",&tm) &&
+		   !strptime(stime,"%y",&tm)
+		  ) error(1,"time not parseable: '%s' -> %li\n",stime,t);
+		t=mktime(&tm);
+		while((dti=dbtgetnxt(dti))) if(labs((long)dbtgett(dti)-(long)t)<labs((long)dbtgett(dt)-(long)t)) dt=dti;
+	}
 	return dt;
 }
 
