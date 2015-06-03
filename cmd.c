@@ -122,7 +122,7 @@ void diff(const char *stime,char sha){ difft(timenewest(stime),sha); }
 char cifilesha(struct dbt *dt,struct dbf *df){
 	unsigned char sha[SHALEN];
 	struct dbh *dh;
-	char ret;
+	char ret=0;
 	shaget(dbfgetfn(df),sha);
 	if(!(dh=dbhget(sha))){ ret=1; dh=dbhnew(sha,0); }
 	dbhadd(dh,dt,df);

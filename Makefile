@@ -1,5 +1,5 @@
 LFLAGS=-lssl -lcrypto -lz -lpthread
-CFLAGS=-g -Wall -pedantic -std=c99
+CFLAGS=-O4 -Wall -pedantic -std=c99
 
 all: hashbackup
 

@@ -46,10 +46,11 @@ struct db {
 	.ex=NULL,
 };
 
-int fkey(const char *fn){
+unsigned int fkey(const char *fn){
 	unsigned char sha[SHALEN];
+	unsigned int *fk=(unsigned int*)sha;
 	shastr(fn,sha);
-	return (*(unsigned int*)sha)%HNCH;
+	return fk[0]%HNCH;
 }
 
 char dbloadbdir(){
@@ -192,7 +193,7 @@ void dbtdel(struct dbt *dt){
 
 struct dbf *dbfnew(struct dbt *dt,const char *fn){
 	struct dbf *df=calloc(1,sizeof(struct dbf));
-	int fk=fkey(fn);
+	unsigned int fk=fkey(fn);
 	df->nxt=dt->fhsh[fk];
 	dt->fhsh[fk]=df;
 	memcpy(df->fn,fn,FNLEN);
@@ -200,17 +201,16 @@ struct dbf *dbfnew(struct dbt *dt,const char *fn){
 }
 
 struct dbf *dbfget(struct dbt *dt,const char *fn){
-	int fk=fkey(fn);
-	struct dbf *df=dt->fhsh[fk];
+	struct dbf *df=dt->fhsh[fkey(fn)];
 	while(df && strncmp(fn,df->fn,FNLEN)) df=df->nxt;
 	return df;
 }
 
 struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
-	int ch;
+	unsigned int fk;
 	if(df && df->nxt) return df->nxt;
-	ch = df ? fkey(df->fn)+1 : 0;
-	for(;ch<HNCH;ch++) if(dt->fhsh[ch]) return dt->fhsh[ch];
+	fk = df ? fkey(df->fn)+1 : 0;
+	for(;fk<HNCH;fk++) if(dt->fhsh[fk]) return dt->fhsh[fk];
 	return NULL;
 }
 
