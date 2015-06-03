@@ -35,7 +35,7 @@ void *fqwrk(void *arg){
 		struct dbf *df;
 		while(!fqw->df){
 			if(fqw->end) return NULL;
-			usleep(10);
+			usleep(100);
 		}
 		pthread_mutex_lock(&fqw->mt);
 		df=fqw->df;
@@ -51,7 +51,7 @@ void fqrun(struct dbt *dt,char (*fana)(struct dbt *dt,struct dbf *df),void (*fwr
 	pthread_create(&fqw.pt,NULL,fqwrk,&fqw);
 	/* TODO: sort by file pos */
 	for(;fq;fq=fq->nxt) if(fana(dt,fq->df)){
-		while(fqw.df) usleep(10);
+		while(fqw.df) usleep(100);
 		pthread_mutex_lock(&fqw.mt);
 		fqw.df=fq->df;
 		pthread_mutex_unlock(&fqw.mt);
