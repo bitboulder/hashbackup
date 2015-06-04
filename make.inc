@@ -1,12 +1,12 @@
 
-CFLAGS+=-Wall -pedantic -Wno-variadic-macros
+CFLAGS+=-Wall -pedantic -std=c99
 LFLAGS+=-lm
 
 ifeq ($(MAKECMDGOALS),debug)
   CFLAGS+=-g -D_DEBUG_ -D_NOASM_
   BDIR=build/dbg
 else
-  CFLAGS+=-g -O4 -D_RELEASE_
+  CFLAGS+=-O4 -D_RELEASE_
   BDIR=build/rel
 endif
 
