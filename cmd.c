@@ -32,13 +32,12 @@ void tlistt(struct dbt *dt){
 	struct dbf *df=NULL;
 	struct dbh *dh=NULL;
 	size_t si=0,ex=0,gz=0,sum=0;
-	while((df=dbfgetnxt(dt,df))) si+=dbfgetst(df)->size;
+	while((df=dbfgetnxt(dt,df))){ nf++; si+=dbfgetst(df)->size; }
 	while((dh=dbhgetnxt(dh))){
 		enum dbhex r=dbhexdt(dh,dt);
 		if(r&DE_IN) gz+=dbhgetsi(dh);
 		if(!(r&DE_EX)) ex+=dbhgetsi(dh);
 		if(!(r&DE_OLD)) sum+=dbhgetsi(dh);
-		nf++;
 	}
 	printf("%s nf %4i si %5s",timefmt(dbtgett(dt)),nf,sizefmt(si));
 	printf(" gz %5s",sizefmt(gz));
