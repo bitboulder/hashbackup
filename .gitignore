@@ -2,3 +2,4 @@
 *.db
 /debian/files
 /debian/hashbackup*
+/build
