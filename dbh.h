@@ -15,7 +15,6 @@ unsigned char *dbhgetsha(struct dbh *dh);
 size_t dbhgetsi(struct dbh *dh);
 void dbhsetsi(struct dbh *dh,size_t si);
 char *dbhgetmk(struct dbh *dh);
-void dbhresetmk();
 
 enum dbhex { DE_IN=0x1, DE_EX=0x2, DE_OLD=0x4 };
 enum dbhex dbhexdt(struct dbh *dh,struct dbt *dt);

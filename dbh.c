@@ -80,10 +80,6 @@ unsigned char *dbhgetsha(struct dbh *dh){ return dh?dh->sha:NULL; }
 size_t dbhgetsi(struct dbh *dh){ return dh->si; }
 void dbhsetsi(struct dbh *dh,size_t si){ dh->si=si; }
 char *dbhgetmk(struct dbh *dh){ return &dh->mk; }
-void dbhresetmk(){
-	struct dbh *dh=NULL;
-	while((dh=dbhgetnxt(dh))) *dbhgetmk(dh)=0;
-}
 
 enum dbhex dbhexdt(struct dbh *dh,struct dbt *dt){
 	struct dbhf *hf;
