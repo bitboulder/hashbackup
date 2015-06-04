@@ -4,7 +4,7 @@ CFLAGS=-O4 -Wall -pedantic -std=c99
 all: hashbackup
 
 hashbackup: $(shell ls *.c *.h)
-	gcc -o hashbackup $(LFLAGS) $(CFLAGS) *.c
+	gcc -o hashbackup $(CFLAGS) *.c $(LFLAGS)
 
 clean:
 	rm hashbackup
