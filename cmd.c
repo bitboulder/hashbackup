@@ -10,6 +10,7 @@
 #include "dirrec.h"
 #include "dat.h"
 #include "fq.h"
+#include "fnsort.h"
 
 void init(const char *basedir,const char *exclude){
 	FILE *fd;
@@ -55,7 +56,7 @@ void tlist(){
 void flistt(struct dbt *dt){
 	struct dbf *df=NULL;
 	printf("t %lu\n",dbtgett(dt));
-	/* TODO: sort by fn */
+	/* TODO: use fnsort */
 	while((df=dbfgetnxt(dt,df))){
 		int i;
 		unsigned char *sha=dbhgetsha(dbfgeth(df));
@@ -82,37 +83,52 @@ struct dbt *timenewest(const char *stime){
 	return dt;
 }
 
-int difile(const char *fn,enum ftyp typ,void *vdt){
-	struct dbt *dt=(struct dbt*)vdt;
+struct darg {
+	struct dbt *dt;
+	struct fns *new,*mod,*del;
+};
+
+int difile(const char *fn,enum ftyp typ,void *arg){
+	struct darg *da=(struct darg*)arg;
 	struct dbf *df;
 	struct st st;
-	if(!(df=dbfget(dt,fn))){ printf("new: %s\n",fn); return 1; }
+	enum statcmp sd;
+	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->new,fn,0); return 1; }
 	statget(1,fn,&st);
 	*dbfgetmk(df)=1;
-	if(statcmp(&st,dbfgetst(df))){ printf("mod: %s\n",fn); return 1; }
+	if((sd=statcmp(&st,dbfgetst(df)))){ fnsadd(da->mod,fn,sd); return 1; }
 	return 0;
 }
 
-int difilesha(const char *fn,enum ftyp typ,void *vdt){
-	struct dbt *dt=(struct dbt*)vdt;
+int difilesha(const char *fn,enum ftyp typ,void *arg){
+	struct darg *da=(struct darg*)arg;
 	struct dbf *df;
 	unsigned char sha[SHALEN];
 	struct dbh *dh;
-	if(difile(fn,typ,vdt)) return 1;
-	if(!(df=dbfget(dt,fn))){ printf("new: %s\n",fn); return 1; }
+	if(difile(fn,typ,arg)) return 1;
+	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->new,fn,0); return 1; }
 	if(!(dh=dbfgeth(df))) return 0;
 	shaget(fn,sha);
-	if(memcmp(sha,dbhgetsha(dh),SHALEN)){ printf("mod: %s\n",fn); return 1; }
+	if(memcmp(sha,dbhgetsha(dh),SHALEN)){ fnsadd(da->mod,fn,SD_SHA); return 1; }
 	return 0;
 }
 
 char difft(struct dbt *dt,char sha){
 	struct dbf *df;
 	int chg;
+	struct darg da={.dt=dt};
+	const char *fn;
+	int sd;
+	da.new=fnsinit();
+	da.mod=fnsinit();
+	da.del=fnsinit();
 	printf("[diff %s]\n",timefmt(dbtgett(dt)));
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
-	chg=dirrec(dbbdir(),dbgetex(),"",sha?difilesha:difile,dt);
-	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ printf("del: %s\n",dbfgetfn(df)); chg++; }
+	chg=dirrec(dbbdir(),dbgetex(),"",sha?difilesha:difile,&da);
+	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ fnsadd(da.del,dbfgetfn(df),0); chg++; }
+	while((fn=fnsnxt(da.mod,&sd))) printf("mod: %s (0x%02x)\n",fn,sd);
+	while((fn=fnsnxt(da.new,NULL))) printf("new: %s\n",fn);
+	while((fn=fnsnxt(da.del,NULL))) printf("del: %s\n",fn);
 	return chg!=0;
 }
 

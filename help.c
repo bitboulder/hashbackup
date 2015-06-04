@@ -94,10 +94,16 @@ void statset(struct st *st,const char *fn){
 	if(lutimes(fn,utim)) error(0,"lutimes failed for '%s'",fn);
 }
 
-char statcmp(struct st *a,struct st *b){
-	struct st x=*a;
-	x.atime=b->atime;
-	return 0!=memcmp(&x,b,sizeof(struct st));
+enum statcmp statcmp(struct st *a,struct st *b){
+	enum statcmp sd=SD_EQL;
+	if(a->typ!=b->typ) sd|=SD_TYP;
+	if(a->uid!=b->uid) sd|=SD_UID;
+	if(a->gid!=b->gid) sd|=SD_GID;
+	if(a->mode!=b->mode) sd|=SD_MODE;
+	if(a->size!=b->size) sd|=SD_SIZE;
+	if(a->mtime!=b->mtime) sd|=SD_MTIME;
+	if(a->ctime!=b->ctime) sd|=SD_CTIME;
+	return sd;
 }
 
 size_t filesize(const char *fn){
