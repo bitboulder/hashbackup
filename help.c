@@ -62,6 +62,27 @@ const char *sizefmt(size_t si){
 	return buf;
 }
 
+const char *statcmpfmt(enum statcmp sd){
+	static char str[128];
+	int i,l;
+	if(sd&SD_NEW) return "new";
+	if(sd&SD_DEL) return "del";
+	if(sd==SD_EQL) return "eql";
+	memcpy(str,"c:",l=2);
+	for(i=1;i<SD_NEW;i<<=1) if(sd&i) switch(i){
+	case SD_TYP:   str[l++]='x'; break;
+	case SD_UID:   str[l++]='u'; break;
+	case SD_GID:   str[l++]='g'; break;
+	case SD_MODE:  str[l++]='m'; break;
+	case SD_SIZE:  str[l++]='s'; break;
+	case SD_MTIME: str[l++]='t'; break;
+	case SD_CTIME: str[l++]='c'; break;
+	case SD_SHA:   str[l++]='h'; break;
+	}
+	str[l]='\0';
+	return str;
+}
+
 char statget(char bdir,const char *fn,struct st *st){
 	char ffn[FNLEN];
 	struct stat s;

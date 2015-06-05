@@ -124,7 +124,7 @@ char difft(struct dbt *dt,char sha){
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
 	chg=dirrec(dbbdir(),dbgetex(),"",sha?difilesha:difile,&da);
 	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ fnsadd(da.fns,dbfgetfn(df),0,SD_DEL); chg++; }
-	while((fn=fnsnxt(da.fns,&sd))) printf("mod: %s (0x%03x)\n",fn,sd);
+	while((fn=fnsnxt(da.fns,&sd))) printf("%-6s: %s\n",statcmpfmt(sd),fn);
 	return chg!=0;
 }
 

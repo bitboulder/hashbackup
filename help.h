@@ -29,6 +29,7 @@ char *fnrmnewline(char *fn);
 struct dbt *timeparse(const char *stime);
 const char *timefmt(time_t t);
 const char *sizefmt(size_t si);
+const char *statcmpfmt(enum statcmp sd);
 
 char statget(char bdir,const char *fn,struct st *st);
 void statset(struct st *st,const char *fn);
