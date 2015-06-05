@@ -85,7 +85,7 @@ struct dbt *timenewest(const char *stime){
 
 struct darg {
 	struct dbt *dt;
-	struct fns *new,*mod,*del;
+	struct fns *fns;
 };
 
 int difile(const char *fn,enum ftyp typ,void *arg){
@@ -93,10 +93,10 @@ int difile(const char *fn,enum ftyp typ,void *arg){
 	struct dbf *df;
 	struct st st;
 	enum statcmp sd;
-	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->new,fn,0); return 1; }
+	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->fns,fn,1,SD_NEW); return 1; }
 	statget(1,fn,&st);
 	*dbfgetmk(df)=1;
-	if((sd=statcmp(&st,dbfgetst(df)))){ fnsadd(da->mod,fn,sd); return 1; }
+	if((sd=statcmp(&st,dbfgetst(df)))){ fnsadd(da->fns,dbfgetfn(df),0,sd); return 1; }
 	return 0;
 }
 
@@ -106,10 +106,10 @@ int difilesha(const char *fn,enum ftyp typ,void *arg){
 	unsigned char sha[SHALEN];
 	struct dbh *dh;
 	if(difile(fn,typ,arg)) return 1;
-	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->new,fn,0); return 1; }
+	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->fns,fn,1,SD_NEW); return 1; }
 	if(!(dh=dbfgeth(df))) return 0;
 	shaget(fn,sha);
-	if(memcmp(sha,dbhgetsha(dh),SHALEN)){ fnsadd(da->mod,fn,SD_SHA); return 1; }
+	if(memcmp(sha,dbhgetsha(dh),SHALEN)){ fnsadd(da->fns,dbfgetfn(df),0,SD_SHA); return 1; }
 	return 0;
 }
 
@@ -119,16 +119,12 @@ char difft(struct dbt *dt,char sha){
 	struct darg da={.dt=dt};
 	const char *fn;
 	int sd;
-	da.new=fnsinit();
-	da.mod=fnsinit();
-	da.del=fnsinit();
+	da.fns=fnsinit();
 	printf("[diff %s]\n",timefmt(dbtgett(dt)));
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
 	chg=dirrec(dbbdir(),dbgetex(),"",sha?difilesha:difile,&da);
-	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ fnsadd(da.del,dbfgetfn(df),0); chg++; }
-	while((fn=fnsnxt(da.mod,&sd))) printf("mod: %s (0x%02x)\n",fn,sd);
-	while((fn=fnsnxt(da.new,NULL))) printf("new: %s\n",fn);
-	while((fn=fnsnxt(da.del,NULL))) printf("del: %s\n",fn);
+	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ fnsadd(da.fns,dbfgetfn(df),0,SD_DEL); chg++; }
+	while((fn=fnsnxt(da.fns,&sd))) printf("mod: %s (0x%03x)\n",fn,sd);
 	return chg!=0;
 }
 

@@ -12,15 +12,17 @@ struct st {
 	time_t atime,mtime,ctime;
 };
 enum statcmp {
-	SD_EQL=0x00,
-	SD_TYP=0x01,
-	SD_UID=0x02,
-	SD_GID=0x04,
-	SD_MODE=0x08,
-	SD_SIZE=0x10,
-	SD_MTIME=0x20,
-	SD_CTIME=0x40,
-	SD_SHA=0x80,
+	SD_EQL  =0x000,
+	SD_TYP  =0x001,
+	SD_UID  =0x002,
+	SD_GID  =0x004,
+	SD_MODE =0x008,
+	SD_SIZE =0x010,
+	SD_MTIME=0x020,
+	SD_CTIME=0x040,
+	SD_SHA  =0x080,
+	SD_NEW  =0x100,
+	SD_DEL  =0x200,
 };
 
 char *fnrmnewline(char *fn);
