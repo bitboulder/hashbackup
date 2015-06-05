@@ -4,11 +4,11 @@
 
 #include "cmd.h"
 #include "main.h"
-#include "db.h"
+#include "dbt.h"
 #include "help.h"
 #include "sha.h"
 #include "dirrec.h"
-#include "dat.h"
+#include "dbhwrk.h"
 #include "fq.h"
 #include "fnsort.h"
 
@@ -144,7 +144,7 @@ char cifilesha(struct dbt *dt,struct dbf *df){
 
 void cifilecp(struct dbf *df){
 	struct dbh *dh=dbfgeth(df);
-	dbhsetsi(dh,datadd(dbhgetsha(dh),dbfgetfn(df)));
+	dbhsetsi(dh,dbhsave(dbhgetsha(dh),dbfgetfn(df)));
 }
 
 int cifile(const char *fn,enum ftyp typ,void *vdt){
@@ -187,7 +187,7 @@ void restoref(struct dbf *df,const char *dstdir){
 	st=dbfgetst(df);
 	snprintf(fn,FNLEN,"%s%s%s",dstdir,dbfgetfn(df),st->typ==FT_DIR?"/":"");
 	switch(st->typ){
-	case FT_FILE: datget(dbhgetsha(dbfgeth(df)),fn); break; /* TODO: sort by file pos */
+	case FT_FILE: dbhrestore(dbhgetsha(dbfgeth(df)),fn); break; /* TODO: sort by file pos */
 	case FT_DIR: mkd(fn); break;
 	case FT_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
 	case FT_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
@@ -218,7 +218,7 @@ void del(const char *stime){
 	while((df=dbfgetnxt(dt,df))){
 		struct dbh *dh=dbfgeth(df);
 		/* TODO: sort by inode */
-		if(dbfgetst(df)->typ==FT_FILE && dbhexdt(dh,dt)) datdel(dbhgetsha(dh));
+		if(dbfgetst(df)->typ==FT_FILE && dbhexdt(dh,dt)) dbhdel(dbhgetsha(dh));
 	}
 	dbtdel(dt);
 }

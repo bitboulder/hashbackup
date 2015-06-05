@@ -3,7 +3,7 @@
 
 struct dbh;
 
-#include "db.h"
+#include "dbt.h"
 
 void dbhload();
 struct dbh *dbhnew(unsigned char *sha,size_t si);

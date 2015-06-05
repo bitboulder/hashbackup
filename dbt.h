@@ -1,10 +1,10 @@
-#ifndef _DB_H
-#define _DB_H
+#ifndef _DBT_H
+#define _DBT_H
 
 #include <time.h>
 
-#define DD	"db"
-#define DH	"dat"
+#define DD	"dbt"
+#define DH	"dbh"
 
 struct dbf;
 struct dbt;

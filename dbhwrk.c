@@ -4,15 +4,15 @@
 #include <string.h>
 #include <zlib.h>
 
-#include "dat.h"
+#include "dbhwrk.h"
 #include "main.h"
-#include "db.h"
+#include "dbt.h"
 #include "help.h"
 #include "sha.h"
 
 #define BUFLEN	8192
 
-size_t datadd(const unsigned char *sha,const char *fn){
+size_t dbhsave(const unsigned char *sha,const char *fn){
 	char fni[FNLEN],fno[FNLEN];
 	FILE *fdi;
 	gzFile fdo;
@@ -31,7 +31,7 @@ size_t datadd(const unsigned char *sha,const char *fn){
 	return filesize(fno);
 }
 
-void datget(const unsigned char *sha,const char *fno){
+void dbhrestore(const unsigned char *sha,const char *fno){
 	char fni[FNLEN];
 	gzFile fdi;
 	FILE *fdo;
@@ -48,7 +48,7 @@ void datget(const unsigned char *sha,const char *fno){
 	fclose(fdo);
 }
 
-void datdel(const unsigned char *sha){
+void dbhdel(const unsigned char *sha){
 	char fn[FNLEN];
 	sha2fn(sha,fn);
 	unlink(fn);

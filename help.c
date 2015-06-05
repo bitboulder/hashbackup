@@ -14,7 +14,7 @@
 
 #include "help.h"
 #include "main.h"
-#include "db.h"
+#include "dbt.h"
 
 char *fnrmnewline(char *fn){
 	int i;

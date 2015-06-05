@@ -7,11 +7,11 @@
 #include <unistd.h>
 #include <zlib.h>
 
-#include "db.h"
+#include "dbt.h"
 #include "main.h"
 #include "help.h"
 #include "sha.h"
-#include "dat.h"
+#include "dbhwrk.h"
 #include "ex.h"
 
 #define HNCH	8192
@@ -100,7 +100,7 @@ void dbload(){
 				if(!dh){
 					char fn[FNLEN];
 					sha2fn(sha,fn);
-					error(0,"dat file missing: '%s'",fn);
+					error(0,"dbh file missing: '%s'",fn);
 				}else dbhadd(dh,dt,df);
 			} break;
 			case FT_LNK: gzread(gd,df->lnk,sizeof(char)*FNLEN); break;

@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "main.h"
-#include "db.h"
+#include "dbt.h"
 #include "cmd.h"
 
 void error(char quit,const char *fmt,...){

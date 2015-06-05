@@ -6,7 +6,7 @@
 
 #include "sha.h"
 #include "main.h"
-#include "db.h"
+#include "dbt.h"
 
 #define BUFLEN	8192
 void shaget(const char *fn,unsigned char *sha){
@@ -60,7 +60,7 @@ void sha2fn(const unsigned char *sha,char *fn){
 
 void fn2sha(const char *fn,unsigned char *sha){
 	int f=0,s;
-	if(!strncmp(fn,"dat/",4)) f=4;
+	if(!strncmp(fn,DH "/",4)) f=4;
 	for(s=0;fn[f] && s<SHALEN*2;f++) if((fn[f]>='0' && fn[f]<='9')||(fn[f]>='a' && fn[f]<='f')){
 		unsigned char c = fn[f]>='a' ? fn[f]-'a'+10 : fn[f]-'0';
 		if(s%2){ *sha+=c; sha++; }else *sha=c<<4;
