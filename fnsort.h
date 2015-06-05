@@ -4,7 +4,7 @@
 struct fns;
 
 struct fns *fnsinit();
-void fnsadd(struct fns *fns,const char *fn,char cp,int arg);
-const char *fnsnxt(struct fns *fns,int *arg);
+void fnsadd(struct fns *fns,const char *fn,char cp,void *arg);
+const char *fnsnxt(struct fns *fns,void **arg);
 
 #endif

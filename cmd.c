@@ -55,15 +55,17 @@ void tlist(){
 
 void flistt(struct dbt *dt){
 	struct dbf *df=NULL;
+	struct fns *fns=fnsinit();
+	const char *fn;
+	const unsigned char *sha;
 	printf("t %lu\n",dbtgett(dt));
-	/* TODO: use fnsort */
-	while((df=dbfgetnxt(dt,df))){
+	while((df=dbfgetnxt(dt,df))) fnsadd(fns,dbfgetfn(df),0,dbhgetsha(dbfgeth(df)));
+	while((fn=fnsnxt(fns,(void**)&sha))){
 		int i;
-		unsigned char *sha=dbhgetsha(dbfgeth(df));
 		printf("  ");
 		if(sha) for(i=0;i<SHALEN;i++) printf("%02x",sha[i]);
 		else printf("%40s","");
-		printf(" %s\n",dbfgetfn(df));
+		printf(" %s\n",fn);
 	}
 }
 
@@ -93,10 +95,10 @@ int difile(const char *fn,enum ftyp typ,void *arg){
 	struct dbf *df;
 	struct st st;
 	enum statcmp sd;
-	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->fns,fn,1,SD_NEW); return 1; }
+	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->fns,fn,1,(void*)SD_NEW); return 1; }
 	statget(1,fn,&st);
 	*dbfgetmk(df)=1;
-	if((sd=statcmp(&st,dbfgetst(df)))){ fnsadd(da->fns,dbfgetfn(df),0,sd); return 1; }
+	if((sd=statcmp(&st,dbfgetst(df)))){ fnsadd(da->fns,dbfgetfn(df),0,(void*)sd); return 1; }
 	return 0;
 }
 
@@ -106,10 +108,10 @@ int difilesha(const char *fn,enum ftyp typ,void *arg){
 	unsigned char sha[SHALEN];
 	struct dbh *dh;
 	if(difile(fn,typ,arg)) return 1;
-	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->fns,fn,1,SD_NEW); return 1; }
+	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->fns,fn,1,(void*)SD_NEW); return 1; }
 	if(!(dh=dbfgeth(df))) return 0;
 	shaget(fn,sha);
-	if(memcmp(sha,dbhgetsha(dh),SHALEN)){ fnsadd(da->fns,dbfgetfn(df),0,SD_SHA); return 1; }
+	if(memcmp(sha,dbhgetsha(dh),SHALEN)){ fnsadd(da->fns,dbfgetfn(df),0,(void*)SD_SHA); return 1; }
 	return 0;
 }
 
@@ -118,13 +120,13 @@ char difft(struct dbt *dt,char sha){
 	int chg;
 	struct darg da={.dt=dt};
 	const char *fn;
-	int sd;
+	void *sd;
 	da.fns=fnsinit();
 	printf("[diff %s]\n",timefmt(dbtgett(dt)));
 	for(df=NULL;(df=dbfgetnxt(dt,df));) *dbfgetmk(df)=0;
 	chg=dirrec(dbbdir(),dbgetex(),"",sha?difilesha:difile,&da);
-	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ fnsadd(da.fns,dbfgetfn(df),0,SD_DEL); chg++; }
-	while((fn=fnsnxt(da.fns,&sd))) printf("%-6s: %s\n",statcmpfmt(sd),fn);
+	for(df=NULL;(df=dbfgetnxt(dt,df));) if(!*dbfgetmk(df)){ fnsadd(da.fns,dbfgetfn(df),0,(void*)SD_DEL); chg++; }
+	while((fn=fnsnxt(da.fns,&sd))) printf("%-6s: %s\n",statcmpfmt((int)((unsigned long)sd)),fn);
 	return chg!=0;
 }
 

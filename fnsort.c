@@ -13,7 +13,7 @@ struct fns {
 	struct fn {
 		const char *fn;
 		char cp;
-		int arg;
+		void *arg;
 	} *fn;
 };
 
@@ -21,7 +21,7 @@ struct fns *fnsinit(){
 	return calloc(1,sizeof(struct fns));
 }
 
-void fnsadd(struct fns *fns,const char *fn,char cp,int arg){
+void fnsadd(struct fns *fns,const char *fn,char cp,void *arg){
 	if(fns->size==fns->used) fns->fn=realloc(fns->fn,(fns->size+=1024)*sizeof(struct fn));
 	if(cp){
 		char *fnc=malloc(FNLEN);
@@ -34,7 +34,7 @@ void fnsadd(struct fns *fns,const char *fn,char cp,int arg){
 
 int fnscmp(const void *a,const void *b){ return -strncmp(((struct fn*)a)->fn,((struct fn*)b)->fn,FNLEN); }
 
-const char *fnsnxt(struct fns *fns,int *arg){
+const char *fnsnxt(struct fns *fns,void **arg){
 	struct fn fn;
 	if(fns->free){ free((char*)fns->free); fns->free=NULL; }
 	if(!fns->used) return NULL;
