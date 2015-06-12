@@ -166,7 +166,7 @@ int cifile(const char *fn,enum ftyp typ,void *vdt){
 		if(dfn && !statcmp(st,dbfgetst(dfn))){
 			struct dbh *dh=dbfgeth(dfn);
 			if(dh) dbhadd(dh,dt,df);
-			else if(dbfgetst(dfn)->typ==FT_EXT2) dbfsetext2(df,dbfgetext2(dfn)); /* TODO: set dh->hf */
+			else if(dbfgetst(dfn)->typ==FT_EXT2) ext2copy(df,dt,dbfgetext2(dfn));
 		}else fqadd(df);
 	break;
 	case FT_DIR: break;

@@ -7,6 +7,7 @@ struct dbe;
 
 char ext2read(struct dbf *df,struct dbt *dt);
 void ext2restore(struct dbf *df,const char *fn);
+void ext2copy(struct dbf *df,struct dbt *dt,struct dbe *de);
 struct dbe *ext2load(void *fd,struct dbt *dt,struct dbf *df);
 void ext2save(struct dbe *de,void *fd);
 size_t ext2getsi(struct dbe *de);

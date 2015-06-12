@@ -74,6 +74,12 @@ void ext2restore(struct dbf *df,const char *fn){
 	free(buf);
 }
 
+void ext2copy(struct dbf *df,struct dbt *dt,struct dbe *de){
+	size_t blk;
+	dbfsetext2(df,de);
+	for(blk=0;blk<de->bnum;blk++) if(de->h[blk]) dbhadd(de->h[blk],dt,df);
+}
+
 struct dbe *ext2load(void *fd,struct dbt *dt,struct dbf *df){
 	struct dbe *de=malloc(sizeof(struct dbe));
 	size_t blk;
