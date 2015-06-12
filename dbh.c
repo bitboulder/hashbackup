@@ -94,3 +94,15 @@ enum dbhex dbhexdt(struct dbh *dh,struct dbt *dt){
 	}
 	return r;
 }
+
+enum dbhex dbhexdf(struct dbh *dh,struct dbf *df){
+	struct dbhf *hf;
+	enum dbhex r=0;
+	if(!dh) return 0;
+	for(hf=dh->hf;hf;hf=hf->nxt){
+		if(hf->df==df) r|=DE_IN;
+		if(hf->df!=df) r|=DE_EX;
+	}
+	return r;
+}
+

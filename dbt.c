@@ -109,7 +109,7 @@ void dbload(){
 			case FT_LNK: gzread(gd,df->u.lnk,sizeof(char)*FNLEN); break;
 			case FT_DIR: break;
 			case FT_NONE: break;
-			case FT_EXT2: dbfsetext2(df,ext2load(&gd)); break;
+			case FT_EXT2: dbfsetext2(df,ext2load(&gd,dt,df)); break;
 			}
 		}
 		gzclose(gd);
@@ -222,7 +222,7 @@ struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
 void dbfsetext2(struct dbf *df,struct dbe *de){
 	df->st.typ=FT_EXT2;
 	df->u.de=de;
-	/* TODO: update de->h->hf->df */
+	df->dh=NULL;
 }
 
 struct dbe *dbfgetext2(struct dbf *df){ return df->u.de; }
@@ -234,4 +234,15 @@ void dbfseth(struct dbf *df,struct dbh *dh){ df->dh=dh; }
 char *dbfgetlnk(struct dbf *df){ return df->u.lnk; }
 struct dbf *dbfgetc(struct dbf *df){ return df->c; }
 struct dbf *dbfgetcnxt(struct dbf *df){ return df->cnxt; }
+
+size_t dbfgetsi(struct dbf *df){
+	if(df->dh) return dbhgetsi(df->dh);
+	if(df->st.typ==FT_EXT2){
+		size_t si=0;
+		struct dbh *dh=NULL;
+		while((dh=dbhgetnxt(dh))) if(dbhexdf(dh,df)&DE_IN) si+=dbhgetsi(dh);
+		return si;
+	}
+	return 0;
+}
 

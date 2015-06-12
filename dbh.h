@@ -18,5 +18,6 @@ char *dbhgetmk(struct dbh *dh);
 
 enum dbhex { DE_IN=0x1, DE_EX=0x2, DE_OLD=0x4 };
 enum dbhex dbhexdt(struct dbh *dh,struct dbt *dt);
+enum dbhex dbhexdf(struct dbh *dh,struct dbf *df);
 
 #endif

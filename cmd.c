@@ -61,15 +61,15 @@ void flistt(struct dbt *dt,char ext2){
 	printf("[flist %s]\n",timefmt(dbtgett(dt)));
 	while((df=dbfgetnxt(dt,df))) fnsadd(fns,dbfgetfn(df),0,df);
 	while((fn=fnsnxt(fns,(void**)&df))){
-		struct dbh *dh=dbfgeth(df);
-		const unsigned char *sha=dbhgetsha(dh);
+		const unsigned char *sha=dbhgetsha(dbfgeth(df));
 		int i;
 		struct st *st=dbfgetst(df);
+		size_t si=dbfgetsi(df);
 		printf("  ");
 		if(sha) for(i=0;i<4;i++) printf("%02x",sha[i]);
 		else printf("%8s","");
 		printf(" %5s",sizefmt(st->size));
-		printf(" %5s",dh?sizefmt(dbhgetsi(dh)):st->typ==FT_EXT2?sizefmt(ext2getsi(dbfgetext2(df))):"");
+		printf(" %5s",si?sizefmt(si):"");
 		printf(" %s\n",fn);
 		if(st->typ==FT_EXT2 && ext2) ext2list(dbfgetext2(df));
 	}
@@ -142,7 +142,7 @@ char cifilesha(struct dbt *dt,struct dbf *df){
 	unsigned char sha[SHALEN];
 	struct dbh *dh;
 	char ret=0;
-	if(ext2read(df)) return 0;
+	if(ext2read(df,dt)) return 0;
 	shaget(dbfgetfn(df),sha);
 	if(!(dh=dbhget(sha))){ ret=1; dh=dbhnew(sha,0); }
 	dbhadd(dh,dt,df);
@@ -166,7 +166,7 @@ int cifile(const char *fn,enum ftyp typ,void *vdt){
 		if(dfn && !statcmp(st,dbfgetst(dfn))){
 			struct dbh *dh=dbfgeth(dfn);
 			if(dh) dbhadd(dh,dt,df);
-			else if(dbfgetst(dfn)->typ==FT_EXT2) dbfsetext2(df,dbfgetext2(dfn));
+			else if(dbfgetst(dfn)->typ==FT_EXT2) dbfsetext2(df,dbfgetext2(dfn)); /* TODO: set dh->hf */
 		}else fqadd(df);
 	break;
 	case FT_DIR: break;

@@ -16,7 +16,7 @@ struct dbe {
 	struct dbh **h;
 };
 
-char ext2read(struct dbf *df){
+char ext2read(struct dbf *df,struct dbt *dt){
 	char ffn[FNLEN];
 	char ret=0;
 	ext2_filsys fs=NULL;
@@ -41,6 +41,7 @@ char ext2read(struct dbf *df){
 				dh=dbhnew(sha,0);
 				dbhsavebuf(sha,buf,de->bsize);
 			}
+			dbhadd(dh,dt,df);
 			de->h[blk]=dh;
 		}
 	dbfsetext2(df,de);
@@ -73,7 +74,7 @@ void ext2restore(struct dbf *df,const char *fn){
 	free(buf);
 }
 
-struct dbe *ext2load(void *fd){
+struct dbe *ext2load(void *fd,struct dbt *dt,struct dbf *df){
 	struct dbe *de=malloc(sizeof(struct dbe));
 	size_t blk;
 	gzFile *gd=(gzFile*)fd;
@@ -90,7 +91,7 @@ struct dbe *ext2load(void *fd){
 				char fn[FNLEN];
 				sha2fn(sha,fn);
 				error(0,"dbh file missing: '%s'",fn);
-			}
+			}else dbhadd(de->h[blk],dt,df);
 		}
 	}
 	return de;
@@ -105,12 +106,6 @@ void ext2save(struct dbe *de,void *fd){
 	gzwrite(*gd,&de->bnum,sizeof(size_t));
 	for(blk=0;blk<de->bnum;blk++)
 		gzwrite(*gd,de->h[blk] ? dbhgetsha(de->h[blk]) : zero,SHALEN);
-}
-
-size_t ext2getsi(struct dbe *de){
-	size_t si=0,blk;
-	for(blk=0;blk<de->bnum;blk++) if(de->h[blk]) si+=dbhgetsi(de->h[blk]);
-	return si;
 }
 
 void ext2list(struct dbe *de){

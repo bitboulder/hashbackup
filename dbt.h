@@ -40,5 +40,6 @@ void dbfseth(struct dbf *df,struct dbh *dh);
 char *dbfgetlnk(struct dbf *df);
 struct dbf *dbfgetc(struct dbf *df);
 struct dbf *dbfgetcnxt(struct dbf *df);
+size_t dbfgetsi(struct dbf *df);
 
 #endif
