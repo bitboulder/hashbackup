@@ -10,6 +10,7 @@ struct dbf;
 struct dbt;
 
 #include "dbh.h"
+#include "ext2.h"
 
 void dbload();
 void dbtsave(struct dbt *dt);
@@ -29,6 +30,8 @@ void dbtdel(struct dbt *dt);
 struct dbf *dbfnew(struct dbt *dt,const char *fn);
 struct dbf *dbfget(struct dbt *dt,const char *fn);
 struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df);
+void dbfsetext2(struct dbf *df,struct dbe *de);
+struct dbe *dbfgetext2(struct dbf *df);
 const char *dbfgetfn(struct dbf *df);
 struct st *dbfgetst(struct dbf *df);
 char *dbfgetmk(struct dbf *df);

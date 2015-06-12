@@ -31,6 +31,17 @@ size_t dbhsave(const unsigned char *sha,const char *fn){
 	return filesize(fno);
 }
 
+size_t dbhsavebuf(const unsigned char *sha,const unsigned char *buf,size_t l){
+	char fno[FNLEN];
+	gzFile fdo;
+	sha2fn(sha,fno);
+	mkd(fno);
+	if(!(fdo=gzopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return 0; }
+	gzwrite(fdo,buf,l);
+	gzclose(fdo);
+	return filesize(fno);
+}
+
 void dbhrestore(const unsigned char *sha,const char *fno){
 	char fni[FNLEN];
 	gzFile fdi;
@@ -46,6 +57,15 @@ void dbhrestore(const unsigned char *sha,const char *fno){
 	}
 	gzclose(fdi);
 	fclose(fdo);
+}
+
+void dbhrestorebuf(const unsigned char *sha,unsigned char *buf,size_t l){
+	char fni[FNLEN];
+	gzFile fdi;
+	sha2fn(sha,fni);
+	if(!(fdi=gzopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return; }
+	gzread(fdi,buf,l);
+	gzclose(fdi);
 }
 
 void dbhdel(const unsigned char *sha){

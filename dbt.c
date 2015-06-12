@@ -22,7 +22,10 @@
 struct dbf {
 	struct dbf *nxt;
 	char fn[FNLEN];
-	char lnk[FNLEN];
+	union {
+		char lnk[FNLEN];
+		struct dbe *de;
+	} u;
 	struct st st;
 	struct dbh *dh;
 	char mk;
@@ -103,9 +106,10 @@ void dbload(){
 					error(0,"dbh file missing: '%s'",fn);
 				}else dbhadd(dh,dt,df);
 			} break;
-			case FT_LNK: gzread(gd,df->lnk,sizeof(char)*FNLEN); break;
+			case FT_LNK: gzread(gd,df->u.lnk,sizeof(char)*FNLEN); break;
 			case FT_DIR: break;
 			case FT_NONE: break;
+			case FT_EXT2: dbfsetext2(df,ext2load(&gd)); break;
 			}
 		}
 		gzclose(gd);
@@ -130,7 +134,8 @@ void dbtsave(struct dbt *dt){
 		gzwrite(fd,&df->st,sizeof(struct st));
 		switch(df->st.typ){
 		case FT_FILE: gzwrite(fd,dbhgetsha(df->dh),sizeof(unsigned char)*SHALEN); break;
-		case FT_LNK: gzwrite(fd,df->lnk,sizeof(char)*FNLEN); break;
+		case FT_LNK: gzwrite(fd,df->u.lnk,sizeof(char)*FNLEN); break;
+		case FT_EXT2: ext2save(dbfgetext2(df),&fd); break;
 		case FT_DIR: break;
 		case FT_NONE: break;
 		}
@@ -214,12 +219,19 @@ struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
 	return NULL;
 }
 
+void dbfsetext2(struct dbf *df,struct dbe *de){
+	df->st.typ=FT_EXT2;
+	df->u.de=de;
+	/* TODO: update de->h->hf->df */
+}
+
+struct dbe *dbfgetext2(struct dbf *df){ return df->u.de; }
 const char *dbfgetfn(struct dbf *df){ return df->fn; }
 struct st *dbfgetst(struct dbf *df){ return &df->st; }
 char *dbfgetmk(struct dbf *df){ return &df->mk; }
 struct dbh *dbfgeth(struct dbf *df){ return df->dh; }
 void dbfseth(struct dbf *df,struct dbh *dh){ df->dh=dh; }
-char *dbfgetlnk(struct dbf *df){ return df->lnk; }
+char *dbfgetlnk(struct dbf *df){ return df->u.lnk; }
 struct dbf *dbfgetc(struct dbf *df){ return df->c; }
 struct dbf *dbfgetcnxt(struct dbf *df){ return df->cnxt; }
 

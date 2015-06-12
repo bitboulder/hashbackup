@@ -11,6 +11,7 @@
 #include "dbhwrk.h"
 #include "fq.h"
 #include "fnsort.h"
+#include "ext2.h"
 
 void init(const char *basedir,const char *exclude){
 	FILE *fd;
@@ -109,6 +110,7 @@ int difilesha(const char *fn,enum ftyp typ,void *arg){
 	struct dbh *dh;
 	if(difile(fn,typ,arg)) return 1;
 	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->fns,fn,1,(void*)SD_NEW); return 1; }
+	/* TODO: FT_EXT2 -> loop over blocks */
 	if(!(dh=dbfgeth(df))) return 0;
 	shaget(fn,sha);
 	if(memcmp(sha,dbhgetsha(dh),SHALEN)){ fnsadd(da->fns,dbfgetfn(df),0,(void*)SD_SHA); return 1; }
@@ -136,6 +138,7 @@ char cifilesha(struct dbt *dt,struct dbf *df){
 	unsigned char sha[SHALEN];
 	struct dbh *dh;
 	char ret=0;
+	if(ext2read(df)) return 0;
 	shaget(dbfgetfn(df),sha);
 	if(!(dh=dbhget(sha))){ ret=1; dh=dbhnew(sha,0); }
 	dbhadd(dh,dt,df);
@@ -159,11 +162,13 @@ int cifile(const char *fn,enum ftyp typ,void *vdt){
 		if(dfn && !statcmp(st,dbfgetst(dfn))){
 			struct dbh *dh=dbfgeth(dfn);
 			if(dh) dbhadd(dh,dt,df);
+			else if(dbfgetst(dfn)->typ==FT_EXT2) dbfsetext2(df,dbfgetext2(dfn));
 		}else fqadd(df);
 	break;
 	case FT_DIR: break;
 	case FT_LNK: lnkget(fn,dbfgetlnk(df)); break;
 	case FT_NONE: error(0,"no backup for none regular file: '%s'",fn);
+	case FT_EXT2: break;
 	}
 	return 1;
 }
@@ -191,6 +196,7 @@ void restoref(struct dbf *df,const char *dstdir){
 	case FT_DIR: mkd(fn); break;
 	case FT_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
 	case FT_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
+	case FT_EXT2: ext2restore(df,fn); break;
 	}
 	for(dfc=dbfgetc(df);dfc;dfc=dbfgetcnxt(dfc)) restoref(dfc,dstdir);
 	statset(st,fn);

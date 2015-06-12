@@ -44,6 +44,10 @@ void shastr(const char *str,unsigned char *sha){
 	SHA((const unsigned char*)str,l,sha);
 }
 
+void shabuf(const unsigned char *buf,size_t l,unsigned char *sha){
+	SHA(buf,l,sha);
+}
+
 void sha2fn(const unsigned char *sha,char *fn){
 	int f,s;
 	f=snprintf(fn,FNLEN,"%s",DH);

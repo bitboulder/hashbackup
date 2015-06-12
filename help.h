@@ -6,7 +6,7 @@
 #include "ex.h"
 
 struct st {
-	enum ftyp { FT_NONE, FT_FILE, FT_DIR, FT_LNK } typ;
+	enum ftyp { FT_NONE, FT_FILE, FT_DIR, FT_LNK, FT_EXT2 } typ;
 	uint32_t uid,gid,mode;
 	size_t size;
 	time_t atime,mtime,ctime;
@@ -24,6 +24,8 @@ enum statcmp {
 	SD_NEW  =0x100,
 	SD_DEL  =0x200,
 };
+
+#define MIN(a,b)	((a)<(b)?(a):(b))
 
 char *fnrmnewline(char *fn);
 struct dbt *timeparse(const char *stime);
