@@ -22,8 +22,9 @@ void usage(const char *prg){
 	printf("       init    BASEDIR [EXPATTERN{|EXPATTERN}]\n");
 	printf("       tlist   [TIMESPEC]\n");
 	printf("       flist   [TIMESPEC]\n");
+	printf("       flistx  [TIMESPEC] (list ext2 blocks)\n");
 	printf("       diff    [TIMESPEC]\n");
-	printf("       diffx   [TIMESPEC]\n");
+	printf("       diffx   [TIMESPEC] (diff sha)\n");
 	printf("       commit\n");
 	printf("       restore [FILESPEC] [TIMESPEC] [DSTDIR]\n");
 	printf("       del     TIMESPEC\n");
@@ -41,7 +42,8 @@ int main(int argc,char **argv){
 		init(argv[2],argc<4?NULL:argv[3]);
 	}
 	else if(!strncmp(cmd,"tlist",5)){ tlist(argc<3?NULL:argv[2]); }
-	else if(!strncmp(cmd,"flist",5)){ flist(argc<3?NULL:argv[2]); }
+	else if(!strncmp(cmd,"flistx",6)){ flist(argc<3?NULL:argv[2],1); }
+	else if(!strncmp(cmd,"flist",5)){ flist(argc<3?NULL:argv[2],0); }
 	else if(!strncmp(cmd,"diffx",5)){ diff(argc<3?NULL:argv[2],1); }
 	else if(!strncmp(cmd,"diff",4)){ diff(argc<3?NULL:argv[2],0); }
 	else if(!strncmp(cmd,"commit",6)){ commit(); }

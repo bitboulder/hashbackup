@@ -3,7 +3,7 @@
 
 void init(const char *basedir,const char *exclude);
 void tlist();
-void flist(const char *stime);
+void flist(const char *stime,char ext2);
 void diff(const char *stime,char sha);
 void commit();
 void restore(const char *fn,const char *stime,const char *dstdir);

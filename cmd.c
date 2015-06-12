@@ -54,28 +54,32 @@ void tlist(){
 	while((dt=dbtgetnxt(dt))) tlistt(dt);
 }
 
-void flistt(struct dbt *dt){
+void flistt(struct dbt *dt,char ext2){
 	struct dbf *df=NULL;
 	struct fns *fns=fnsinit();
 	const char *fn;
-	const unsigned char *sha;
-	printf("t %lu\n",dbtgett(dt));
-	while((df=dbfgetnxt(dt,df))) fnsadd(fns,dbfgetfn(df),0,dbhgetsha(dbfgeth(df)));
-	while((fn=fnsnxt(fns,(void**)&sha))){
+	printf("[flist %s]\n",timefmt(dbtgett(dt)));
+	while((df=dbfgetnxt(dt,df))) fnsadd(fns,dbfgetfn(df),0,df);
+	while((fn=fnsnxt(fns,(void**)&df))){
+		struct dbh *dh=dbfgeth(df);
+		const unsigned char *sha=dbhgetsha(dh);
 		int i;
+		struct st *st=dbfgetst(df);
 		printf("  ");
-		if(sha) for(i=0;i<SHALEN;i++) printf("%02x",sha[i]);
-		else printf("%40s","");
+		if(sha) for(i=0;i<4;i++) printf("%02x",sha[i]);
+		else printf("%8s","");
+		printf(" %5s",sizefmt(st->size));
+		printf(" %5s",dh?sizefmt(dbhgetsi(dh)):st->typ==FT_EXT2?sizefmt(ext2getsi(dbfgetext2(df))):"");
 		printf(" %s\n",fn);
+		if(st->typ==FT_EXT2 && ext2) ext2list(dbfgetext2(df));
 	}
 }
 
-void flist(const char *stime){
-	printf("[flist %s]\n",stime);
-	if(stime) flistt(timeparse(stime));
+void flist(const char *stime,char ext2){
+	if(stime) flistt(timeparse(stime),ext2);
 	else{
 		struct dbt *dt=NULL;
-		while((dt=dbtgetnxt(dt))) flistt(dt);
+		while((dt=dbtgetnxt(dt))) flistt(dt,ext2);
 	}
 }
 

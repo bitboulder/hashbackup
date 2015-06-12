@@ -106,3 +106,24 @@ void ext2save(struct dbe *de,void *fd){
 	for(blk=0;blk<de->bnum;blk++)
 		gzwrite(*gd,de->h[blk] ? dbhgetsha(de->h[blk]) : zero,SHALEN);
 }
+
+size_t ext2getsi(struct dbe *de){
+	size_t si=0,blk;
+	for(blk=0;blk<de->bnum;blk++) if(de->h[blk]) si+=dbhgetsi(de->h[blk]);
+	return si;
+}
+
+void ext2list(struct dbe *de){
+	size_t blk;
+	for(blk=0;blk<de->bnum;blk++) if(de->h[blk]){
+		unsigned char *sha=dbhgetsha(de->h[blk]);
+		int i;
+		printf("    ");
+		for(i=0;i<4;i++) printf("%02x",sha[i]);
+		printf(" %5s",sizefmt(de->bsize));
+		printf(" %5s",sizefmt(dbhgetsi(de->h[blk])));
+		printf(" 0x%06lx\n",blk);
+	}
+		
+}
+
