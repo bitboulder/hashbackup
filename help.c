@@ -129,7 +129,7 @@ enum statcmp statcmp(struct st *a,struct st *b){
 
 size_t filesize(const char *fn){
 	struct stat st;
-	if(!lstat(fn,&st)) return st.st_size;
+	if(!lstat(fn,&st)) return 512*st.st_blocks;
 	return 0;
 }
 
