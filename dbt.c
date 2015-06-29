@@ -149,8 +149,12 @@ struct ex *dbgetex(){ return db.ex; }
 
 struct dbt *dbtnew(time_t t){
 	struct dbt *dt=calloc(1,sizeof(struct dbt)), **di=&db.dt;
-	dt->t= t ? t : time(NULL);
-	while(di[0] && di[0]->t<t) di=&di[0]->nxt;
+	if(!t) t=time(NULL);
+	while(di[0] && di[0]->t<=t){
+		if(di[0] && di[0]->t==t) t++;
+		di=&di[0]->nxt;
+	}
+	dt->t=t;
 	dt->nxt=di[0];
 	di[0]=dt;
 	return dt;
