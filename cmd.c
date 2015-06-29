@@ -228,7 +228,7 @@ void del(const char *stime){
 	while((df=dbfgetnxt(dt,df))){
 		struct dbh *dh=dbfgeth(df);
 		/* TODO: sort by inode */
-		if(dbfgetst(df)->typ==FT_FILE && dbhexdt(dh,dt)) dbhdel(dbhgetsha(dh));
+		if(dbfgetst(df)->typ==FT_FILE && !(dbhexdt(dh,dt)&DE_EX)) dbhdel(dbhgetsha(dh));
 	}
 	dbtdel(dt);
 }
