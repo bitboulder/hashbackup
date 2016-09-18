@@ -93,6 +93,7 @@ struct dbt *timenewest(const char *stime){
 struct darg {
 	struct dbt *dt;
 	struct fns *fns;
+	char noctime;
 };
 
 int difile(const char *fn,enum ftyp typ,void *arg){
@@ -103,7 +104,7 @@ int difile(const char *fn,enum ftyp typ,void *arg){
 	if(!(df=dbfget(da->dt,fn))){ fnsadd(da->fns,fn,1,(void*)SD_NEW); return 1; }
 	statget(1,fn,&st);
 	*dbfgetmk(df)=1;
-	if((sd=statcmp(&st,dbfgetst(df)))){ fnsadd(da->fns,dbfgetfn(df),0,(void*)sd); return 1; }
+	if((sd=statcmp(&st,dbfgetst(df),da->noctime))){ fnsadd(da->fns,dbfgetfn(df),0,(void*)sd); return 1; }
 	return 0;
 }
 
@@ -121,10 +122,10 @@ int difilesha(const char *fn,enum ftyp typ,void *arg){
 	return 0;
 }
 
-char difft(struct dbt *dt,char sha){
+char difft(struct dbt *dt,char noctime,char sha){
 	struct dbf *df;
 	int chg;
-	struct darg da={.dt=dt};
+	struct darg da={.dt=dt,.noctime=noctime};
 	const char *fn;
 	void *sd;
 	da.fns=fnsinit();
@@ -136,7 +137,7 @@ char difft(struct dbt *dt,char sha){
 	return chg!=0;
 }
 
-void diff(const char *stime,char sha){ difft(timenewest(stime),sha); }
+void diff(const char *stime,char noctime,char sha){ difft(timenewest(stime),noctime,sha); }
 
 char cifilesha(struct dbt *dt,struct dbf *df){
 	unsigned char sha[SHALEN];
@@ -149,21 +150,27 @@ char cifilesha(struct dbt *dt,struct dbf *df){
 	return ret;
 }
 
+struct carg {
+	struct dbt *dt[2];
+	char noctime;
+};
+
 void cifilecp(struct dbf *df){
 	struct dbh *dh=dbfgeth(df);
 	dbhsetsi(dh,dbhsave(dbhgetsha(dh),dbfgetfn(df)));
 }
 
-int cifile(const char *fn,enum ftyp typ,void *vdt){
-	struct dbt *dtn=((struct dbt**)vdt)[0];
-	struct dbt *dt =((struct dbt**)vdt)[1];
+int cifile(const char *fn,enum ftyp typ,void *arg){
+	struct carg *ca=(struct carg*)arg;
+	struct dbt *dtn=ca->dt[0];
+	struct dbt *dt =ca->dt[1];
 	struct dbf *df=dbfnew(dt,fn);
 	struct dbf *dfn=dtn?dbfget(dtn,fn):NULL;
 	struct st *st;
 	statget(1,fn,st=dbfgetst(df));
 	switch(st->typ){
 	case FT_FILE:
-		if(dfn && !statcmp(st,dbfgetst(dfn))){
+		if(dfn && !statcmp(st,dbfgetst(dfn),ca->noctime)){
 			struct dbh *dh=dbfgeth(dfn);
 			if(dh) dbhadd(dh,dt,df);
 			else if(dbfgetst(dfn)->typ==FT_EXT2) ext2copy(df,dt,dbfgetext2(dfn));
@@ -177,16 +184,16 @@ int cifile(const char *fn,enum ftyp typ,void *vdt){
 	return 1;
 }
 
-void commit(){
-	struct dbt *dt[2];
-	dt[0]=dbtgetnewest();
-	if(dt[0] && !difft(dt[0],0)) error(1,"no changes -> no commit");
-	dt[1]=dbtnew(0);
-	printf("[commit %s]\n",timefmt(dbtgett(dt[1])));
-	printf("[copy %i files]\n",dirrec(dbbdir(),dbgetex(),"",cifile,dt));
-	fqrun(dt[1],cifilesha,cifilecp);
-	dbtsave(dt[1]);
-	tlistt(dt[1]);
+void commit(char noctime){
+	struct carg ca={.noctime=noctime};
+	ca.dt[0]=dbtgetnewest();
+	if(ca.dt[0] && !difft(ca.dt[0],noctime,0)) error(1,"no changes -> no commit");
+	ca.dt[1]=dbtnew(0);
+	printf("[commit %s]\n",timefmt(dbtgett(ca.dt[1])));
+	printf("[copy %i files]\n",dirrec(dbbdir(),dbgetex(),"",cifile,&ca));
+	fqrun(ca.dt[1],cifilesha,cifilecp);
+	dbtsave(ca.dt[1]);
+	tlistt(ca.dt[1]);
 }
 
 void restoref(struct dbf *df,const char *dstdir){

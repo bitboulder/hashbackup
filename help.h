@@ -35,7 +35,7 @@ const char *statcmpfmt(enum statcmp sd);
 
 char statget(char bdir,const char *fn,struct st *st);
 void statset(struct st *st,const char *fn);
-enum statcmp statcmp(struct st *a,struct st *b);
+enum statcmp statcmp(struct st *a,struct st *b,char noctime);
 size_t filesize(const char *fn);
 void mkd(const char *fn);
 
