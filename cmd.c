@@ -12,6 +12,7 @@
 #include "fq.h"
 #include "fnsort.h"
 #include "ext2.h"
+#include "mc.h"
 
 void init(const char *basedir,const char *exclude){
 	FILE *fd;

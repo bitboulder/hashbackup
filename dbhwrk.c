@@ -9,25 +9,40 @@
 #include "dbt.h"
 #include "help.h"
 #include "sha.h"
+#include "mc.h"
 
 #define BUFLEN	8192
 
 size_t dbhsave(const unsigned char *sha,const char *fn){
 	char fni[FNLEN],fno[FNLEN];
-	FILE *fdi;
-	gzFile fdo;
 	sha2fn(sha,fno);
 	snprintf(fni,FNLEN,"%s/%s",dbbdir(),fn);
 	mkd(fno);
-	if(!(fdi=fopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return 0; }
-	if(!(fdo=gzopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return 0; }
-	while(!feof(fdi)){
-		char buf[BUFLEN];
-		size_t r=fread(buf,1,BUFLEN,fdi);
-		gzwrite(fdo,buf,r);
+	if(mc_nozip(fn)){
+		FILE *fdi;
+		FILE *fdo;
+		if(!(fdi=fopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return 0; }
+		if(!(fdo=fopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return 0; }
+		while(!feof(fdi)){
+			char buf[BUFLEN];
+			size_t r=fread(buf,1,BUFLEN,fdi);
+			fwrite(buf,1,r,fdo);
+		}
+		fclose(fdi);
+		fclose(fdo);
+	}else{
+		FILE *fdi;
+		gzFile fdo;
+		if(!(fdi=fopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return 0; }
+		if(!(fdo=gzopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return 0; }
+		while(!feof(fdi)){
+			char buf[BUFLEN];
+			size_t r=fread(buf,1,BUFLEN,fdi);
+			gzwrite(fdo,buf,r);
+		}
+		fclose(fdi);
+		gzclose(fdo);
 	}
-	fclose(fdi);
-	gzclose(fdo);
 	return filesize(fno);
 }
 

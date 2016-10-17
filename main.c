@@ -6,6 +6,7 @@
 #include "main.h"
 #include "dbt.h"
 #include "cmd.h"
+#include "mc.h"
 
 void error(char quit,const char *fmt,...){
 	va_list ap;
@@ -28,12 +29,14 @@ void usage(const char *prg){
 	printf("       commit  [-c]\n");
 	printf("       restore [FILESPEC] [TIMESPEC] [DSTDIR]\n");
 	printf("       del     TIMESPEC\n");
+	printf("       mctest  FILENAME\n");
 	printf("       dbcheck\n");
 	exit(1);
 }
 
 int main(int argc,char **argv){
 	char *cmd;
+	mc_init();
 	dbload();
 	if(argc<2) usage(argv[0]);
 	cmd=argv[1];
@@ -55,6 +58,7 @@ int main(int argc,char **argv){
 		del(argv[2]);
 	}
 	else if(!strncmp(cmd,"dbcheck",7)){ dbcheck(); }
+	else if(!strncmp(cmd,"mctest",7)){ if(argc>=3) printf("mc: %s\n",mc_get(argv[2])); }
 	else usage(argv[0]);
 	return 0;
 }
