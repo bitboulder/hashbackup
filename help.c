@@ -147,7 +147,7 @@ void mkd(const char *fn){
 void lnkget(const char *fn,char *lnk){
 	char ffn[FNLEN];
 	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
-	readlink(ffn,lnk,FNLEN);
+	readlink(ffn,lnk,FNSLEN);
 }
 
 void lnkset(const char *lnk,const char *fn){

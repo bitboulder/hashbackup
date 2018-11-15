@@ -2,6 +2,7 @@
 #define _MAIN_H
 
 #define FNLEN	1024
+#define FNSLEN	256
 
 #define SHALEN	20
 

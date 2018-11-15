@@ -1,4 +1,4 @@
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -21,9 +21,9 @@
 
 struct dbf {
 	struct dbf *nxt;
-	char fn[FNLEN];
+	char fn[FNSLEN];
 	union {
-		char lnk[FNLEN];
+		char lnk[FNSLEN];
 		struct dbe *de;
 	} u;
 	struct st st;
@@ -82,6 +82,7 @@ void dbload(){
 		time_t t;
 		struct dbt *dt;
 		char ffn[FNLEN];
+		char tmp[FNLEN];
 		while(i<251 && di->d_name[i]>='0' && di->d_name[i]<='9') i++;
 		if(strncmp(di->d_name+i,".dbt",4)) continue;
 		di->d_name[i+4]='\0';
@@ -106,7 +107,7 @@ void dbload(){
 					error(0,"dbh file missing: '%s'",fn);
 				}else dbhadd(dh,dt,df);
 			} break;
-			case FT_LNK: gzread(gd,df->u.lnk,sizeof(char)*FNLEN); break;
+			case FT_LNK: gzread(gd,tmp,sizeof(char)*FNLEN); snprintf(df->u.lnk,FNSLEN,"%s",tmp); break;
 			case FT_DIR: break;
 			case FT_NONE: break;
 			case FT_EXT2: dbfsetext2(df,ext2load(&gd,dt,df)); break;
@@ -123,6 +124,7 @@ void dbtsave(struct dbt *dt){
 	unsigned int v;
 	int ch;
 	struct dbf *df;
+	char tmp[FNLEN];
 	printf("[dbtsave]\n");
 	snprintf(fn,FNLEN,DD "/%li.dbt",dt->t);
 	if(!(fd=gzopen(fn,"wb"))) error(1,"db open failed for '%s'",fn);
@@ -134,7 +136,7 @@ void dbtsave(struct dbt *dt){
 		gzwrite(fd,&df->st,sizeof(struct st));
 		switch(df->st.typ){
 		case FT_FILE: gzwrite(fd,dbhgetsha(df->dh),sizeof(unsigned char)*SHALEN); break;
-		case FT_LNK: gzwrite(fd,df->u.lnk,sizeof(char)*FNLEN); break;
+		case FT_LNK: snprintf(tmp,FNLEN,"%s",df->u.lnk); gzwrite(fd,tmp,sizeof(char)*FNLEN); break;
 		case FT_EXT2: ext2save(dbfgetext2(df),&fd); break;
 		case FT_DIR: break;
 		case FT_NONE: break;
@@ -205,13 +207,13 @@ struct dbf *dbfnew(struct dbt *dt,const char *fn){
 	unsigned int fk=fkey(fn);
 	df->nxt=dt->fhsh[fk];
 	dt->fhsh[fk]=df;
-	memcpy(df->fn,fn,FNLEN);
+	snprintf(df->fn,FNSLEN,"%s",fn);
 	return df;
 }
 
 struct dbf *dbfget(struct dbt *dt,const char *fn){
 	struct dbf *df=dt->fhsh[fkey(fn)];
-	while(df && strncmp(fn,df->fn,FNLEN)) df=df->nxt;
+	while(df && strncmp(fn,df->fn,FNSLEN)) df=df->nxt;
 	return df;
 }
 

@@ -41,11 +41,11 @@ void shagetdb(const char *fn,unsigned char *sha){
 
 void shastr(const char *str,unsigned char *sha){
 	size_t l=strlen(str);
-	SHA((const unsigned char*)str,l,sha);
+	SHA256((const unsigned char*)str,l,sha);
 }
 
 void shabuf(const unsigned char *buf,size_t l,unsigned char *sha){
-	SHA(buf,l,sha);
+	SHA256(buf,l,sha);
 }
 
 void sha2fn(const unsigned char *sha,char *fn){
