@@ -21,9 +21,9 @@
 
 struct dbf {
 	struct dbf *nxt;
-	char fn[FNSLEN];
+	struct str fn;
 	union {
-		char lnk[FNSLEN];
+		struct str lnk;
 		struct dbe *de;
 	} u;
 	struct st st;
@@ -41,10 +41,11 @@ struct dbt {
 };
 
 struct db {
-	char bdir[FNLEN];
+	struct str bdir;
 	struct ex *ex;
 	struct dbt *dt;
 } db = {
+	.bdir=STRDEF,
 	.dt=NULL,
 	.ex=NULL,
 };
@@ -59,10 +60,12 @@ unsigned int fkey(const char *fn){
 char dbloadbdir(){
 	FILE *fd;
 	if(!(fd=fopen("basedir","r"))) return 0;
-	if(!fgets(db.bdir,FNLEN,fd)) return 0;
+	str_setlen(&db.bdir,FNFLEN);
+	if(!fgets(db.bdir.s,db.bdir.l,fd)) return 0;
 	fclose(fd);
-	db.bdir[FNLEN-1]='\0';
-	fnrmnewline(db.bdir);
+	db.bdir.s[db.bdir.l-1]='\0';
+	fnrmnewline(&db.bdir);
+	str_clip(&db.bdir);
 	return 1;
 }
 
@@ -76,24 +79,26 @@ void dbload(){
 	dbhload();
 	if(!(dd=opendir(DD))) return;
 	while((di=readdir(dd))){
-		char fn[FNLEN];
+		char fn[FNFLEN];
 		int i=0;
 		unsigned int v;
 		time_t t;
 		struct dbt *dt;
-		char ffn[FNLEN];
-		char tmp[FNLEN];
+		struct str ffn=STRDEF;
+		struct str tmp=STRDEF;
+		str_setlen(&ffn,FNFLEN);
+		str_setlen(&tmp,FNFLEN);
 		while(i<251 && di->d_name[i]>='0' && di->d_name[i]<='9') i++;
 		if(strncmp(di->d_name+i,".dbt",4)) continue;
 		di->d_name[i+4]='\0';
-		snprintf(fn,FNLEN,DD "/%s",di->d_name);
+		snprintf(fn,sizeof(fn),DD "/%s",di->d_name);
 		if(!(gd=gzopen(fn,"rb"))) error(1,"dbt file not readable: '%s'",fn);
 		gzread(gd,&v,sizeof(unsigned int)); if(v!=MARKER)  error(1,"dbt file with wrong marker: '%s'",fn);
 		gzread(gd,&v,sizeof(unsigned int)); if(v!=VERSION) error(1,"dbt file with wrong version: '%s'",fn);
 		gzread(gd,&t,sizeof(time_t));
 		dt=dbtnew(t);
-		while(gzgets(gd,ffn,FNLEN) && ffn[0]!='\n' && ffn[0]){
-			struct dbf *df=dbfnew(dt,fnrmnewline(ffn));
+		while(gzgets(gd,ffn.s,ffn.l) && ffn.s[0]!='\n' && ffn.s[0]){
+			struct dbf *df=dbfnew(dt,*fnrmnewline(&ffn));
 			gzread(gd,&df->st,sizeof(struct st));
 			switch(df->st.typ){
 			case FT_FILE: {
@@ -102,31 +107,33 @@ void dbload(){
 				gzread(gd,sha,sizeof(unsigned char)*SHALEN);
 				dh=dbhget(sha);
 				if(!dh){
-					char fn[FNLEN];
-					sha2fn(sha,fn);
-					error(0,"dbh file missing: '%s'",fn);
+					sha2fn(sha,&tmp);
+					error(0,"dbh file missing: '%s'",tmp.s);
 				}else dbhadd(dh,dt,df);
 			} break;
-			case FT_LNK: gzread(gd,tmp,sizeof(char)*FNLEN); snprintf(df->u.lnk,FNSLEN,"%s",tmp); break;
+			case FT_LNK: gzread(gd,tmp.s,tmp.l); str_copy(&df->u.lnk,tmp,1); break;
 			case FT_DIR: break;
 			case FT_NONE: break;
 			case FT_EXT2: dbfsetext2(df,ext2load(&gd,dt,df)); break;
 			}
 		}
 		gzclose(gd);
+		str_setlen(&ffn,0);
+		str_setlen(&tmp,0);
 	}
 	closedir(dd);
 }
 
 void dbtsave(struct dbt *dt){
-	char fn[FNLEN];
+	char fn[FNFLEN];
 	gzFile fd;
 	unsigned int v;
 	int ch;
 	struct dbf *df;
-	char tmp[FNLEN];
+	struct str tmp;
+	str_setlen(&tmp,FNFLEN);
 	printf("[dbtsave]\n");
-	snprintf(fn,FNLEN,DD "/%li.dbt",dt->t);
+	snprintf(fn,sizeof(fn),DD "/%li.dbt",dt->t);
 	if(!(fd=gzopen(fn,"wb"))) error(1,"db open failed for '%s'",fn);
 	v=MARKER;  gzwrite(fd,&v,sizeof(unsigned int));
 	v=VERSION; gzwrite(fd,&v,sizeof(unsigned int));
@@ -136,7 +143,7 @@ void dbtsave(struct dbt *dt){
 		gzwrite(fd,&df->st,sizeof(struct st));
 		switch(df->st.typ){
 		case FT_FILE: gzwrite(fd,dbhgetsha(df->dh),sizeof(unsigned char)*SHALEN); break;
-		case FT_LNK: snprintf(tmp,FNLEN,"%s",df->u.lnk); gzwrite(fd,tmp,sizeof(char)*FNLEN); break;
+		case FT_LNK: str_copy(&tmp,df->u.lnk,0); gzwrite(fd,tmp.s,tmp.l); break;
 		case FT_EXT2: ext2save(dbfgetext2(df),&fd); break;
 		case FT_DIR: break;
 		case FT_NONE: break;
@@ -144,9 +151,10 @@ void dbtsave(struct dbt *dt){
 	}
 	gzprintf(fd,"\n");
 	gzclose(fd);
+	str_setlen(&tmp,0);
 }
 
-const char *dbbdir(){ return db.bdir; }
+const char *dbbdir(){ return db.bdir.s; }
 struct ex *dbgetex(){ return db.ex; }
 
 struct dbt *dbtnew(time_t t){
@@ -182,13 +190,13 @@ struct dbf *dbtgetc(struct dbt *dt){ return dt->c; }
 void dbtsetc(struct dbt *dt){
 	struct dbf *df=NULL;
 	char *p;
-	while((df=dbfgetnxt(dt,df))) if((p=strrchr(df->fn,'/')) && p>df->fn){
+	while((df=dbfgetnxt(dt,df))) if((p=strrchr(df->fn.s,'/')) && p>df->fn.s){
 		struct dbf *dfp;
 		*p='\0';
-		if((dfp=dbfget(dt,df->fn))){
+		if((dfp=dbfget(dt,df->fn.s))){
 			df->cnxt=dfp->c;
 			dfp->c=df;
-		}else error(0,"parent not found: '%s'",df->fn);
+		}else error(0,"parent not found: '%s'",df->fn.s);
 		*p='/';
 	}else{
 		df->cnxt=dt->c;
@@ -197,30 +205,30 @@ void dbtsetc(struct dbt *dt){
 }
 
 void dbtdel(struct dbt *dt){
-	char fn[FNLEN];
-	snprintf(fn,FNLEN,DD "/%li.dbt",dt->t);
+	char fn[FNFLEN];
+	snprintf(fn,sizeof(fn),DD "/%li.dbt",dt->t);
 	unlink(fn);
 }
 
-struct dbf *dbfnew(struct dbt *dt,const char *fn){
+struct dbf *dbfnew(struct dbt *dt,const struct str fn){
 	struct dbf *df=calloc(1,sizeof(struct dbf));
-	unsigned int fk=fkey(fn);
+	unsigned int fk=fkey(fn.s);
 	df->nxt=dt->fhsh[fk];
 	dt->fhsh[fk]=df;
-	snprintf(df->fn,FNSLEN,"%s",fn);
+	str_copy(&df->fn,fn,1);
 	return df;
 }
 
 struct dbf *dbfget(struct dbt *dt,const char *fn){
 	struct dbf *df=dt->fhsh[fkey(fn)];
-	while(df && strncmp(fn,df->fn,FNSLEN)) df=df->nxt;
+	while(df && strncmp(fn,df->fn.s,MIN(strlen(fn),df->fn.l))) df=df->nxt;
 	return df;
 }
 
 struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df){
 	unsigned int fk;
 	if(df && df->nxt) return df->nxt;
-	fk = df ? fkey(df->fn)+1 : 0;
+	fk = df ? fkey(df->fn.s)+1 : 0;
 	for(;fk<HNCH;fk++) if(dt->fhsh[fk]) return dt->fhsh[fk];
 	return NULL;
 }
@@ -232,12 +240,12 @@ void dbfsetext2(struct dbf *df,struct dbe *de){
 }
 
 struct dbe *dbfgetext2(struct dbf *df){ return df->u.de; }
-const char *dbfgetfn(struct dbf *df){ return df->fn; }
+const char *dbfgetfn(struct dbf *df){ return df->fn.s; }
 struct st *dbfgetst(struct dbf *df){ return &df->st; }
 char *dbfgetmk(struct dbf *df){ return &df->mk; }
 struct dbh *dbfgeth(struct dbf *df){ return df->dh; }
 void dbfseth(struct dbf *df,struct dbh *dh){ df->dh=dh; }
-char *dbfgetlnk(struct dbf *df){ return df->u.lnk; }
+struct str *dbfgetlnk(struct dbf *df){ return &df->u.lnk; }
 struct dbf *dbfgetc(struct dbf *df){ return df->c; }
 struct dbf *dbfgetcnxt(struct dbf *df){ return df->cnxt; }
 

@@ -17,13 +17,13 @@ struct dbe {
 };
 
 char ext2read(struct dbf *df,struct dbt *dt){
-	char ffn[FNLEN];
+	char ffn[FNFLEN];
 	char ret=0;
 	ext2_filsys fs=NULL;
 	size_t blk;
 	struct dbe *de;
 	unsigned char *buf;
-	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),dbfgetfn(df));
+	snprintf(ffn,sizeof(ffn),"%s/%s",dbbdir(),dbfgetfn(df));
 	if(ext2fs_open(ffn,0,0,0,unix_io_manager,&fs)) return ret;
 	if(ext2fs_read_inode_bitmap(fs)) goto end;
 	if(ext2fs_read_block_bitmap(fs)) goto end;
@@ -94,9 +94,11 @@ struct dbe *ext2load(void *fd,struct dbt *dt,struct dbf *df){
 		while(i<SHALEN && !sha[i]) i++;
 		if(i<SHALEN){
 			if(!(de->h[blk]=dbhget(sha))){
-				char fn[FNLEN];
-				sha2fn(sha,fn);
-				error(0,"dbh file missing: '%s'",fn);
+				struct str fn=STRDEF;
+				str_setlen(&fn,FNFLEN);
+				sha2fn(sha,&fn);
+				error(0,"dbh file missing: '%s'",fn.s);
+				str_setlen(&fn,0);
 			}else dbhadd(de->h[blk],dt,df);
 		}
 	}

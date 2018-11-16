@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <time.h>
 #include "ex.h"
+#include "str.h"
 
 struct st {
 	enum ftyp { FT_NONE, FT_FILE, FT_DIR, FT_LNK, FT_EXT2 } typ;
@@ -27,7 +28,7 @@ enum statcmp {
 
 #define MIN(a,b)	((a)<(b)?(a):(b))
 
-char *fnrmnewline(char *fn);
+struct str *fnrmnewline(struct str *fn);
 struct dbt *timeparse(const char *stime);
 const char *timefmt(time_t t);
 const char *sizefmt(size_t si);
@@ -39,7 +40,7 @@ enum statcmp statcmp(struct st *a,struct st *b,char noctime);
 size_t filesize(const char *fn);
 void mkd(const char *fn);
 
-void lnkget(const char *fn,char *lnk);
+void lnkget(const char *fn,struct str *lnk);
 void lnkset(const char *lnk,const char *fn);
 
 #endif

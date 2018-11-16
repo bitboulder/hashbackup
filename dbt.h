@@ -11,6 +11,7 @@ struct dbt;
 
 #include "dbh.h"
 #include "ext2.h"
+#include "str.h"
 
 void dbload();
 void dbtsave(struct dbt *dt);
@@ -27,7 +28,7 @@ struct dbf *dbtgetc(struct dbt *dt);
 void dbtsetc(struct dbt *dt);
 void dbtdel(struct dbt *dt);
 
-struct dbf *dbfnew(struct dbt *dt,const char *fn);
+struct dbf *dbfnew(struct dbt *dt,const struct str fn);
 struct dbf *dbfget(struct dbt *dt,const char *fn);
 struct dbf *dbfgetnxt(struct dbt *dt,struct dbf *df);
 void dbfsetext2(struct dbf *df,struct dbe *de);
@@ -37,7 +38,7 @@ struct st *dbfgetst(struct dbf *df);
 char *dbfgetmk(struct dbf *df);
 struct dbh *dbfgeth(struct dbf *df);
 void dbfseth(struct dbf *df,struct dbh *dh);
-char *dbfgetlnk(struct dbf *df);
+struct str *dbfgetlnk(struct dbf *df);
 struct dbf *dbfgetc(struct dbf *df);
 struct dbf *dbfgetcnxt(struct dbf *df);
 size_t dbfgetsi(struct dbf *df);

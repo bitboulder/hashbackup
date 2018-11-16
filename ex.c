@@ -8,26 +8,30 @@
 #include "help.h"
 
 struct ex {
-	char pat[FNLEN];
+	char pat[FNFLEN];
 	struct ex *nxt;
 };
 
 struct ex *exload(const char *fn){
 	FILE *fd;
-	char ex[2048],*p,*pat;
+	struct str ex=STRDEF;
+	char *p,*pat;
 	struct ex *ret=NULL;
-	if(!(fd=fopen(fn,"r"))) return NULL;
-	if(!fgets(ex,sizeof(ex),fd)) return NULL;
+	str_setlen(&ex,2048);
+	if(!(fd=fopen(fn,"r"))) goto end;
+	if(!fgets(ex.s,ex.l,fd)) goto end;
 	fclose(fd);
-	ex[sizeof(ex)-1]='\0';
-	fnrmnewline(ex);
-	p=ex;
+	ex.s[ex.l-1]='\0';
+	fnrmnewline(&ex);
+	p=ex.s;
 	while((pat=strsep(&p,"|"))){
 		struct ex *ex=malloc(sizeof(struct ex));
-		snprintf(ex->pat,FNLEN,"%s",pat);
+		snprintf(ex->pat,sizeof(ex->pat),"%s",pat);
 		ex->nxt=ret;
 		ret=ex;
 	}
+end:
+	str_setlen(&ex,0);
 	return ret;
 }
 

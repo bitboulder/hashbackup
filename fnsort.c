@@ -24,15 +24,16 @@ struct fns *fnsinit(){
 void fnsadd(struct fns *fns,const char *fn,char cp,void *arg){
 	if(fns->size==fns->used) fns->fn=realloc(fns->fn,(fns->size+=1024)*sizeof(struct fn));
 	if(cp){
-		char *fnc=malloc(FNLEN);
-		snprintf(fnc,FNLEN,"%s",fn);
+		size_t l=strlen(fn)+1;
+		char *fnc=malloc(l);
+		snprintf(fnc,l,"%s",fn);
 		fn=fnc;
 	}
 	fns->fn[fns->used++]=(struct fn){.fn=fn,.arg=arg,.cp=cp};
 	fns->sort=0;
 }
 
-int fnscmp(const void *a,const void *b){ return -strncmp(((struct fn*)a)->fn,((struct fn*)b)->fn,FNLEN); }
+int fnscmp(const void *a,const void *b){ return -strcmp(((struct fn*)a)->fn,((struct fn*)b)->fn); }
 
 const char *fnsnxt(struct fns *fns,void **arg){
 	struct fn fn;

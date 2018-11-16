@@ -14,15 +14,18 @@
 #define BUFLEN	8192
 
 size_t dbhsave(const unsigned char *sha,const char *fn){
-	char fni[FNLEN],fno[FNLEN];
-	sha2fn(sha,fno);
-	snprintf(fni,FNLEN,"%s/%s",dbbdir(),fn);
-	mkd(fno);
+	char fni[FNFLEN];
+	struct str fno=STRDEF;
+	size_t ret;
+	str_setlen(&fno,FNFLEN);
+	sha2fn(sha,&fno);
+	snprintf(fni,sizeof(fni),"%s/%s",dbbdir(),fn);
+	mkd(fno.s);
 	if(mc_nozip(fn)){
 		FILE *fdi;
 		FILE *fdo;
 		if(!(fdi=fopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return 0; }
-		if(!(fdo=fopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return 0; }
+		if(!(fdo=fopen(fno.s,"wb"))){ error(1,"file open failed for '%s'",fno.s); return 0; }
 		while(!feof(fdi)){
 			char buf[BUFLEN];
 			size_t r=fread(buf,1,BUFLEN,fdi);
@@ -34,7 +37,7 @@ size_t dbhsave(const unsigned char *sha,const char *fn){
 		FILE *fdi;
 		gzFile fdo;
 		if(!(fdi=fopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return 0; }
-		if(!(fdo=gzopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return 0; }
+		if(!(fdo=gzopen(fno.s,"wb"))){ error(1,"file open failed for '%s'",fno.s); return 0; }
 		while(!feof(fdi)){
 			char buf[BUFLEN];
 			size_t r=fread(buf,1,BUFLEN,fdi);
@@ -43,27 +46,34 @@ size_t dbhsave(const unsigned char *sha,const char *fn){
 		fclose(fdi);
 		gzclose(fdo);
 	}
-	return filesize(fno);
+	ret=filesize(fno.s);
+	str_setlen(&fno,0);
+	return ret;
 }
 
 size_t dbhsavebuf(const unsigned char *sha,const unsigned char *buf,size_t l){
-	char fno[FNLEN];
+	struct str fno;
+	size_t ret;
+	str_setlen(&fno,FNFLEN);
 	gzFile fdo;
-	sha2fn(sha,fno);
-	mkd(fno);
-	if(!(fdo=gzopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return 0; }
+	sha2fn(sha,&fno);
+	mkd(fno.s);
+	if(!(fdo=gzopen(fno.s,"wb"))){ error(1,"file open failed for '%s'",fno.s); return 0; }
 	gzwrite(fdo,buf,l);
 	gzclose(fdo);
-	return filesize(fno);
+	ret=filesize(fno.s);
+	str_setlen(&fno,0);
+	return ret;
 }
 
 void dbhrestore(const unsigned char *sha,const char *fno){
-	char fni[FNLEN];
+	struct str fni;
 	gzFile fdi;
 	FILE *fdo;
-	sha2fn(sha,fni);
+	str_setlen(&fni,FNFLEN);
+	sha2fn(sha,&fni);
 	mkd(fno);
-	if(!(fdi=gzopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return; }
+	if(!(fdi=gzopen(fni.s,"rb"))){ error(1,"file open failed for '%s'",fni.s); return; }
 	if(!(fdo=fopen(fno,"wb"))){ error(1,"file open failed for '%s'",fno); return; }
 	while(!gzeof(fdi)){
 		char buf[BUFLEN];
@@ -72,20 +82,25 @@ void dbhrestore(const unsigned char *sha,const char *fno){
 	}
 	gzclose(fdi);
 	fclose(fdo);
+	str_setlen(&fni,0);
 }
 
 void dbhrestorebuf(const unsigned char *sha,unsigned char *buf,size_t l){
-	char fni[FNLEN];
+	struct str fni;
 	gzFile fdi;
-	sha2fn(sha,fni);
-	if(!(fdi=gzopen(fni,"rb"))){ error(1,"file open failed for '%s'",fni); return; }
+	str_setlen(&fni,FNFLEN);
+	sha2fn(sha,&fni);
+	if(!(fdi=gzopen(fni.s,"rb"))){ error(1,"file open failed for '%s'",fni.s); return; }
 	gzread(fdi,buf,l);
 	gzclose(fdi);
+	str_setlen(&fni,0);
 }
 
 void dbhdel(const unsigned char *sha){
-	char fn[FNLEN];
-	sha2fn(sha,fn);
-	unlink(fn);
+	struct str fn;
+	str_setlen(&fn,FNFLEN);
+	sha2fn(sha,&fn);
+	unlink(fn.s);
+	str_setlen(&fn,0);
 }
 

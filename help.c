@@ -16,10 +16,10 @@
 #include "main.h"
 #include "dbt.h"
 
-char *fnrmnewline(char *fn){
+struct str *fnrmnewline(struct str *fn){
 	int i;
-	for(i=0;i<FNLEN-1 && fn[i] && fn[i]!='\n';) i++;
-	fn[i]='\0';
+	for(i=0;i<fn->l-1 && fn->s[i] && fn->s[i]!='\n';) i++;
+	fn->s[i]='\0';
 	return fn;
 }
 
@@ -84,9 +84,9 @@ const char *statcmpfmt(enum statcmp sd){
 }
 
 char statget(char bdir,const char *fn,struct st *st){
-	char ffn[FNLEN];
+	char ffn[FNFLEN];
 	struct stat s;
-	if(bdir){ snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn); fn=ffn; }
+	if(bdir){ snprintf(ffn,sizeof(ffn),"%s/%s",dbbdir(),fn); fn=ffn; }
 	if(lstat(fn,&s)){
 		error(0,"file stat failed for '%s'",fn);
 		return 0;
@@ -135,8 +135,8 @@ size_t filesize(const char *fn){
 
 void mkd(const char *fn){
 	int i;
-	char dn[FNLEN];
-	for(i=0;i<FNLEN && fn[i];i++){
+	char dn[FNFLEN];
+	for(i=0;i<sizeof(dn) && fn[i];i++){
 		struct stat st;
 		dn[i]='\0';
 		if(i && fn[i]=='/' && lstat(dn,&st)) mkdir(dn,0777);
@@ -144,10 +144,12 @@ void mkd(const char *fn){
 	}
 }
 
-void lnkget(const char *fn,char *lnk){
-	char ffn[FNLEN];
-	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
-	readlink(ffn,lnk,FNSLEN);
+void lnkget(const char *fn,struct str *lnk){
+	char ffn[FNFLEN];
+	str_setlen(lnk,FNFLEN);
+	snprintf(ffn,FNFLEN,"%s/%s",dbbdir(),fn);
+	readlink(ffn,lnk->s,lnk->l);
+	str_clip(lnk);
 }
 
 void lnkset(const char *lnk,const char *fn){

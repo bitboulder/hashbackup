@@ -13,6 +13,7 @@
 #include "fnsort.h"
 #include "ext2.h"
 #include "mc.h"
+#include "str.h"
 
 void init(const char *basedir,const char *exclude){
 	FILE *fd;
@@ -165,7 +166,7 @@ int cifile(const char *fn,enum ftyp typ,void *arg){
 	struct carg *ca=(struct carg*)arg;
 	struct dbt *dtn=ca->dt[0];
 	struct dbt *dt =ca->dt[1];
-	struct dbf *df=dbfnew(dt,fn);
+	struct dbf *df=dbfnew(dt,STR(fn));
 	struct dbf *dfn=dtn?dbfget(dtn,fn):NULL;
 	struct st *st;
 	statget(1,fn,st=dbfgetst(df));
@@ -199,14 +200,14 @@ void commit(char noctime){
 
 void restoref(struct dbf *df,const char *dstdir){
 	struct st *st;
-	char fn[FNLEN];
+	char fn[FNFLEN];
 	struct dbf *dfc;
 	st=dbfgetst(df);
-	snprintf(fn,FNLEN,"%s%s%s",dstdir,dbfgetfn(df),st->typ==FT_DIR?"/":"");
+	snprintf(fn,sizeof(fn),"%s%s%s",dstdir,dbfgetfn(df),st->typ==FT_DIR?"/":"");
 	switch(st->typ){
 	case FT_FILE: dbhrestore(dbhgetsha(dbfgeth(df)),fn); break; /* TODO: sort by file pos */
 	case FT_DIR: mkd(fn); break;
-	case FT_LNK: mkd(fn); lnkset(dbfgetlnk(df),fn); break;
+	case FT_LNK: mkd(fn); lnkset(dbfgetlnk(df)->s,fn); break;
 	case FT_NONE: error(0,"no restore for none regular file: '%s'",fn); break;
 	case FT_EXT2: ext2restore(df,fn); break;
 	}
@@ -248,14 +249,16 @@ void dbcheck(){
 	printf("[dbcheck]\n");
 	for(dt=NULL;(dt=dbtgetnxt(dt));) for(df=NULL;(df=dbfgetnxt(dt,df));) if((dh=dbfgeth(df))) *dbhgetmk(dh)=1;
 	for(dh=NULL;(dh=dbhgetnxt(dh));){
-		char fn[FNLEN];
-		sha2fn(dbhgetsha(dh),fn);
+		struct str fn=STRDEF;
+		str_setlen(&fn,FNFLEN);
+		sha2fn(dbhgetsha(dh),&fn);
 		if(*dbhgetmk(dh)){
 			unsigned char sha[SHALEN];
 			/* TODO: sort by file pos */
-			shagetdb(fn,sha);
-			if(memcmp(sha,dbhgetsha(dh),SHALEN)) error(0,"sha missmatch: '%s'",fn);
-		}else error(0,"unused file: '%s'",fn);
+			shagetdb(fn.s,sha);
+			if(memcmp(sha,dbhgetsha(dh),SHALEN)) error(0,"sha missmatch: '%s'",fn.s);
+		}else error(0,"unused file: '%s'",fn.s);
+		str_setlen(&fn,0);
 	}
 }
 

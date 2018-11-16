@@ -8,7 +8,7 @@
 
 struct dri {
 	size_t ino;
-	char fn[FNLEN];
+	char fn[FNFLEN];
 	enum ftyp typ;
 };
 
@@ -70,16 +70,16 @@ struct dri *drispop(struct dris *ds){
 }
 
 void drdir(struct dr *dr,const char *dir,size_t ino){
-	char dn[FNLEN];
+	char dn[FNFLEN];
 	DIR *dd;
 	struct dirent *di;
-	snprintf(dn,FNLEN,"%s/%s",dr->bdir,dir);
+	snprintf(dn,sizeof(dn),"%s/%s",dr->bdir,dir);
 	if(!(dd=opendir(dn))){ error(0,"opendir failed for '%s'",dn); return; }
 	while((di=readdir(dd))){
 		struct dri *d;
 		if(di->d_name[0]=='.' && (!di->d_name[1] || (di->d_name[1]=='.' && !di->d_name[2]))) continue;
 		d=malloc(sizeof(struct dri));
-		snprintf(d->fn,FNLEN,"%s/%s",dir,di->d_name);
+		snprintf(d->fn,sizeof(d->fn),"%s/%s",dir,di->d_name);
 		if(exfn(dr->ex,d->fn)){ free(d); continue; }
 		switch(di->d_type){
 		case DT_REG: d->typ=FT_FILE; break;

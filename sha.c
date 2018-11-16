@@ -10,10 +10,10 @@
 
 #define BUFLEN	8192
 void shaget(const char *fn,unsigned char *sha){
-	char ffn[FNLEN];
+	char ffn[FNFLEN];
 	FILE *fd;
 	SHA_CTX c;
-	snprintf(ffn,FNLEN,"%s/%s",dbbdir(),fn);
+	snprintf(ffn,sizeof(ffn),"%s/%s",dbbdir(),fn);
 	if(!(fd=fopen(ffn,"rb"))){ error(0,"file open failed for '%s'",ffn); return; }
 	SHA1_Init(&c);
 	while(!feof(fd)){
@@ -48,18 +48,19 @@ void shabuf(const unsigned char *buf,size_t l,unsigned char *sha){
 	SHA256(buf,l,sha);
 }
 
-void sha2fn(const unsigned char *sha,char *fn){
+void sha2fn(const unsigned char *sha,struct str *fn){
 	int f,s;
-	f=snprintf(fn,FNLEN,"%s",DH);
-	fn[f++]='/';
+	if(fn->l==0) error(1,"no space in string");
+	f=snprintf(fn->s,fn->l,"%s",DH);
+	fn->s[f++]='/';
 	for(s=0;s<SHALEN*2;s++){
 		unsigned char c= s%2 ? *sha&0xf : *sha>>4;
-		fn[f++] = c>=10 ? c-10+'a' : c+'0';
+		fn->s[f++] = c>=10 ? c-10+'a' : c+'0';
 		if(s%2) sha++;
-		if(s==1) fn[f++]='/';
-		if(s==3) fn[f++]='/';
+		if(s==1) fn->s[f++]='/';
+		if(s==3) fn->s[f++]='/';
 	}
-	fn[f++]='\0';
+	fn->s[f++]='\0';
 }
 
 void fn2sha(const char *fn,unsigned char *sha){
