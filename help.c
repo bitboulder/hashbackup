@@ -146,9 +146,12 @@ void mkd(const char *fn){
 
 void lnkget(const char *fn,struct str *lnk){
 	char ffn[FNFLEN];
+	size_t l;
 	str_setlen(lnk,FNFLEN);
 	snprintf(ffn,FNFLEN,"%s/%s",dbbdir(),fn);
-	readlink(ffn,lnk->s,lnk->l);
+	l=readlink(ffn,lnk->s,lnk->l);
+	if(l<0 || l>=lnk->l) error(1,"readlink failed or exceeds buffer len");
+	lnk->s[l]='\0';
 	str_clip(lnk);
 }
 
