@@ -130,7 +130,7 @@ void dbtsave(struct dbt *dt){
 	unsigned int v;
 	int ch;
 	struct dbf *df;
-	struct str tmp;
+	struct str tmp=STRDEF;
 	str_setlen(&tmp,FNFLEN);
 	printf("[dbtsave]\n");
 	snprintf(fn,sizeof(fn),DD "/%li.dbt",dt->t);
@@ -139,7 +139,7 @@ void dbtsave(struct dbt *dt){
 	v=VERSION; gzwrite(fd,&v,sizeof(unsigned int));
 	gzwrite(fd,&dt->t,sizeof(time_t));
 	for(ch=0;ch<HNCH;ch++) for(df=dt->fhsh[ch];df;df=df->nxt){
-		gzprintf(fd,"%s\n",df->fn);
+		gzprintf(fd,"%s\n",df->fn.s);
 		gzwrite(fd,&df->st,sizeof(struct st));
 		switch(df->st.typ){
 		case FT_FILE: gzwrite(fd,dbhgetsha(df->dh),sizeof(unsigned char)*SHALEN); break;

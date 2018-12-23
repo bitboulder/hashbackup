@@ -52,7 +52,7 @@ size_t dbhsave(const unsigned char *sha,const char *fn){
 }
 
 size_t dbhsavebuf(const unsigned char *sha,const unsigned char *buf,size_t l){
-	struct str fno;
+	struct str fno=STRDEF;
 	size_t ret;
 	str_setlen(&fno,FNFLEN);
 	gzFile fdo;
@@ -67,7 +67,7 @@ size_t dbhsavebuf(const unsigned char *sha,const unsigned char *buf,size_t l){
 }
 
 void dbhrestore(const unsigned char *sha,const char *fno){
-	struct str fni;
+	struct str fni=STRDEF;
 	gzFile fdi;
 	FILE *fdo;
 	str_setlen(&fni,FNFLEN);
@@ -86,7 +86,7 @@ void dbhrestore(const unsigned char *sha,const char *fno){
 }
 
 void dbhrestorebuf(const unsigned char *sha,unsigned char *buf,size_t l){
-	struct str fni;
+	struct str fni=STRDEF;
 	gzFile fdi;
 	str_setlen(&fni,FNFLEN);
 	sha2fn(sha,&fni);
@@ -97,7 +97,7 @@ void dbhrestorebuf(const unsigned char *sha,unsigned char *buf,size_t l){
 }
 
 void dbhdel(const unsigned char *sha){
-	struct str fn;
+	struct str fn=STRDEF;
 	str_setlen(&fn,FNFLEN);
 	sha2fn(sha,&fn);
 	unlink(fn.s);
