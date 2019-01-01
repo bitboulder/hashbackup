@@ -85,6 +85,7 @@ void drdir(struct dr *dr,const char *dir,size_t ino){
 		case DT_REG: d->typ=FT_FILE; break;
 		case DT_DIR: d->typ=FT_DIR; break;
 		case DT_LNK: d->typ=FT_LNK; break;
+		/* case DT_UNKNOWN: call stat */
 		default: d->typ=FT_NONE; break;
 		}
 		d->ino=di->d_ino;
